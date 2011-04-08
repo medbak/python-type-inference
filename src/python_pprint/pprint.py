@@ -1,20 +1,15 @@
 #!/usr/bin/env python
-"""Python AST pretty-printer.
-
-To me, it is totally unf*ckinbelievable that the standard Python compiler module
-does not come with a pretty-printer for the AST. Here is one.
-"""
+"""Python AST pretty-printer."""
 
 import sys
 from compiler.ast import Node
 
-
 def pprintAst(ast, indent='  ', stream=sys.stdout):
-    "Pretty-print an AST to the given output stream."
+    """Pretty-print an AST to the given output stream."""
     rec_node(ast, 0, indent, stream.write)
 
 def rec_node(node, level, indent, write):
-    "Recurse through a node, pretty-printing it."
+    """Recurse through a node, pretty-printing it."""
     pfx = indent * level
     if isinstance(node, Node):
         write(pfx)
@@ -40,9 +35,15 @@ def rec_node(node, level, indent, write):
         write(pfx)
         write(repr(node))
 
+def usage():
+	print "Print Python AST:"
+	print "Usage: ./" + __file__ + " <.py>"
 
 if __name__ == '__main__':
-    def test():
-        import compiler
-        pprintAst(compiler.parseFile(__file__))
-    test()
+    def main():
+	if(len(sys.argv) != 2):
+		usage()
+	else:
+      		import compiler
+        	pprintAst(compiler.parseFile(sys.argv[1]))
+    main()
