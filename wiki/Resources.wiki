@@ -2,34 +2,31 @@
 
 = Papers=
 Below are some of the papers we found relating to static analysis for Python and other scripting languages.
-
-*  Simon Holm Jensen, Anders Møller, Peter Thiemann. “Interprocedural Analysis with Lazy Propagation”. SAS 2010.
+ *  Simon Holm Jensen, Anders Møller, Peter Thiemann. “Interprocedural Analysis with Lazy Propagation”. SAS 2010.
      * http://dx.doi.org/10.1007/978-3-642-15769-1_20
      * http://www.daimi.au.dk/~amoeller/papers/lazy/paper.pdf
-*  S Jensen, A Møller, P Thiemann. “Type Analysis for JavaScript”. SAS 2009.
+ *  S Jensen, A Møller, P Thiemann. “Type Analysis for JavaScript”. SAS 2009.
      * http://www.springerlink.com/content/yv60v168w42k2484/
      * http://www.cs.au.dk/~amoeller/papers/tajs/paper.pdf (Author's Preprint)
-*  M Furr et al, “Static type inference for Ruby” (2009 ACM Symposium on Applied Computing)
+ *  M Furr et al, “Static type inference for Ruby” (2009 ACM Symposium on Applied Computing)
      * http://portal.acm.org/citation.cfm?id=1529700
      * http://marmoset.cs.umd.edu/~furr/papers/druby-oops09.pdf
-*  C Anderson, et al., “Towards type inference for JavaScript” (ECOOP 2005)
+ *  C Anderson, et al., “Towards type inference for JavaScript” (ECOOP 2005)
      * http://slurp.doc.ic.ac.uk/pubs/typeinferenceforjavascript-ecoop05.pdf
      * http://pubs.doc.ic.ac.uk/chrisandersonphd/ (Thesis version)
-*  M Salib, “Starkiller: A static type inferencer and compiler for Python” (2004)
+ *  M Salib, “Starkiller: A static type inferencer and compiler for Python” (2004)
      * http://people.csail.mit.edu/jrb/Projects/starkiller.pdf (Master's Thesis)
      * http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.95.3786&rep=rep1&type=pdf (Conference version)
 
 = Tools =
 Existing Python tools (limited to mostly syntactic checks):
-
-*  PyChecker : http://pychecker.sourceforge.net/
-*  PyFlakes : http://pypi.python.org/pypi/pyflakes
-*  PyLint: http://www.logilab.org/project/pylint
-*  PySonar : http://yinwang0.wordpress.com/2010/09/12/pysonar/
+ *  PyChecker : http://pychecker.sourceforge.net/ 
+ *  PyFlakes : http://pypi.python.org/pypi/pyflakes
+ *  PyLint: http://www.logilab.org/project/pylint
+ *  PySonar : http://yinwang0.wordpress.com/2010/09/12/pysonar/
 
 = Language References =
 Python Language:
-
-* Tutorial: http://docs.python.org/2.7/tutorial/
-* Language definition: http://docs.python.org/2.7/reference/
-* Formal grammar spec: http://docs.python.org/2.7/reference/grammar.html
+ * Tutorial: http://docs.python.org/2.7/tutorial/
+ * Language definition: http://docs.python.org/2.7/reference/
+ * Formal grammar spec: http://docs.python.org/2.7/reference/grammar.html
