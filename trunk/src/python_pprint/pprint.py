@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """Python AST pretty-printer.
 
 To me, it is totally unf*ckinbelievable that the standard Python compiler module
