@@ -1,0 +1,1 @@
+Module([TryExcept([ImportFrom('OverrideFrom23._Res', [alias('*', None)], 0, lineno=2, col_offset=4)], [ExceptHandler(Name('ImportError', Load(), lineno=3, col_offset=7), None, [ImportFrom('_Res', [alias('*', None)], 0, lineno=4, col_offset=4)], lineno=3, col_offset=0)], [], lineno=1, col_offset=0)])

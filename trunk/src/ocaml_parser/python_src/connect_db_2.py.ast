@@ -1,0 +1,1 @@
+Module([Import([alias('sqlite3', None)], lineno=1, col_offset=0), Assign([Name('con', Store(), lineno=3, col_offset=0)], Call(Attribute(Name('sqlite3', Load(), lineno=3, col_offset=6), 'connect', Load(), lineno=3, col_offset=6), [Str(':memory:', lineno=3, col_offset=22)], [], None, None, lineno=3, col_offset=6), lineno=3, col_offset=0)])

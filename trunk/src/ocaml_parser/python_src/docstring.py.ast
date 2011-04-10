@@ -1,0 +1,1 @@
+Module([Expr(Str('Some documentation.\n', lineno=2, col_offset=-1), lineno=2, col_offset=-1)])

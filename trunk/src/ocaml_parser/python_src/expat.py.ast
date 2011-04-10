@@ -1,0 +1,1 @@
+Module([Expr(Str('Interface to the Expat non-validating XML parser.', lineno=1, col_offset=0), lineno=1, col_offset=0), Assign([Name('__version__', Store(), lineno=2, col_offset=0)], Str('$Revision: 17640 $', lineno=2, col_offset=14), lineno=2, col_offset=0), ImportFrom('pyexpat', [alias('*', None)], 0, lineno=4, col_offset=0)])

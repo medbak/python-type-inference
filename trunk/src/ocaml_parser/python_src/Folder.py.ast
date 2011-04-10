@@ -1,0 +1,1 @@
+Module([ImportFrom('_Folder', [alias('*', None)], 0, lineno=1, col_offset=0)])

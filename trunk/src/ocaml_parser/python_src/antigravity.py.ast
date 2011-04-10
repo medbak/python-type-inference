@@ -1,0 +1,1 @@
+Module([Import([alias('webbrowser', None)], lineno=2, col_offset=0), Expr(Call(Attribute(Name('webbrowser', Load(), lineno=4, col_offset=0), 'open', Load(), lineno=4, col_offset=0), [Str('http://xkcd.com/353/', lineno=4, col_offset=16)], [], None, None, lineno=4, col_offset=0), lineno=4, col_offset=0)])
