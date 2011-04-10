@@ -103,6 +103,7 @@
      ("Yield", YIELD);
      ("lineno", LINENO);
      ("col_offset", COLOFFSET);
+     ("alias", ALIAS);
     ]
 } 
 

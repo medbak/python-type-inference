@@ -1,0 +1,1 @@
+Module([Import([alias('sys', None)], lineno=1, col_offset=0), ImportFrom('ctypes', [alias('*', None)], 0, lineno=2, col_offset=0)])

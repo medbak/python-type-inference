@@ -1,0 +1,1 @@
+Module([FunctionDef('parrot', arguments([], None, None, []), [Pass( lineno=2, col_offset=4)], [], lineno=1, col_offset=0)])

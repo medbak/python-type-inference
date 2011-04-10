@@ -1,0 +1,1 @@
+Module([FunctionDef('f', arguments([], None, None, []), [Expr(Str('maybe a docstring', lineno=1, col_offset=9), lineno=1, col_offset=9)], [], lineno=1, col_offset=0)])

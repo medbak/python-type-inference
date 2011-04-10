@@ -1,0 +1,1 @@
+Module([Import([alias('imp', None)], lineno=6, col_offset=0), Import([alias('infinite_reload', None)], lineno=7, col_offset=0), Expr(Call(Attribute(Name('imp', Load(), lineno=8, col_offset=0), 'reload', Load(), lineno=8, col_offset=0), [Name('infinite_reload', Load(), lineno=8, col_offset=11)], [], None, None, lineno=8, col_offset=0), lineno=8, col_offset=0)])

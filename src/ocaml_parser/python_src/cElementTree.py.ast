@@ -1,0 +1,1 @@
+Module([ImportFrom('_elementtree', [alias('*', None)], 0, lineno=3, col_offset=0)])

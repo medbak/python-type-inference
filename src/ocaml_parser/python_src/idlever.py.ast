@@ -1,0 +1,1 @@
+Module([Assign([Name('IDLE_VERSION', Store(), lineno=1, col_offset=0)], Str('2.7.1', lineno=1, col_offset=15), lineno=1, col_offset=0)])

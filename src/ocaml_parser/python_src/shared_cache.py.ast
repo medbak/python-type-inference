@@ -1,0 +1,1 @@
+Module([Import([alias('sqlite3', None)], lineno=1, col_offset=0), Expr(Call(Attribute(Name('sqlite3', Load(), lineno=6, col_offset=0), 'enable_shared_cache', Load(), lineno=6, col_offset=0), [Name('True', Load(), lineno=6, col_offset=28)], [], None, None, lineno=6, col_offset=0), lineno=6, col_offset=0)])

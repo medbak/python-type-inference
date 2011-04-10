@@ -1,0 +1,1 @@
+Module([ImportFrom('lib2to3.fixer_base', [alias('BaseFix', None)], 0, lineno=1, col_offset=0), ClassDef('FixBadOrder', [Name('BaseFix', Load(), lineno=3, col_offset=18)], [Assign([Name('order', Store(), lineno=5, col_offset=4)], Str('crazy', lineno=5, col_offset=12), lineno=5, col_offset=4)], [], lineno=3, col_offset=0)])

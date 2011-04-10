@@ -1,0 +1,1 @@
+Module([Print(None, [Str('BOM BOOM!', lineno=2, col_offset=6)], True, lineno=2, col_offset=0)])

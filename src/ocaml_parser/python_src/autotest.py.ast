@@ -1,0 +1,1 @@
+Module([ImportFrom('test', [alias('regrtest', None)], 0, lineno=5, col_offset=0), Expr(Call(Attribute(Name('regrtest', Load(), lineno=6, col_offset=0), 'main', Load(), lineno=6, col_offset=0), [], [], None, None, lineno=6, col_offset=0), lineno=6, col_offset=0)])

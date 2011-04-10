@@ -13,7 +13,8 @@
 %token FUNCTIONDEF GENERATOREXP GLOBAL GT GTE IF IFEXP IMPORT IMPORTFROM IN INDEX INTERACTIVE INVERT IS ISNOT LSHIFT LAMBDA LIST
 %token LISTCOMP LOAD LT LTE MOD MODULE MULT NAME NOT NOTEQ NOTIN NUM OR PARAM PASS POW PRINT RSHIFT RAISE REPR RETURN SET SETCOMP
 %token SLICE STORE STR SUB SUBSCRIPT SUITE TRYEXCEPT TRYFINALLY TUPLE UADD USUB UNARYOP WHILE WITH YIELD
-
+%token ALIAS
+ 
 %token LINENO COLOFFSET
  
 %token LB RB LP RP COMMA EQUAL
@@ -40,7 +41,7 @@
 //%type <P.excepthandler> excepthandler
 //%type <P.arguments> arguments
 //%type <P.keyword> keyword
-//%type <P.alias> alias
+%type <P.alias> alias
 %type <P.loc> loc
  
 %%
@@ -94,4 +95,9 @@ cmpop: EQ LP RP  { P.Eq }
    | ISNOT LP RP { P.IsNot }
    | IN LP RP    { P.In }
    | NOTIN LP RP { P.NotIn }
+;
+
+alias: ALIAS LP STRING COMMA NONE RP { P.Alias($3, None) }
+   | ALIAS LP STRING COMMA STRING RP { P.Alias($3, Some($5)) }
+;
 %%

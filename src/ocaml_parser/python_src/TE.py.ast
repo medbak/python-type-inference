@@ -1,0 +1,1 @@
+Module([ImportFrom('_TE', [alias('*', None)], 0, lineno=1, col_offset=0)])
