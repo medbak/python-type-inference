@@ -1,0 +1,5 @@
+Compile:
+	ocamlbuild main.native
+
+Run:
+	./_build/main.native
