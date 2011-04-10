@@ -13,7 +13,7 @@
 %token FUNCTIONDEF GENERATOREXP GLOBAL GT GTE IF IFEXP IMPORT IMPORTFROM IN INDEX INTERACTIVE INVERT IS ISNOT LSHIFT LAMBDA LIST
 %token LISTCOMP LOAD LT LTE MOD MODULE MULT NAME NONE NOT NOTEQ NOTIN NUM OR PARAM PASS POW PRINT RSHIFT RAISE REPR RETURN
 %token SET SETCOMP SLICE STORE STR SUB SUBSCRIPT SUITE TRYEXCEPT TRYFINALLY TUPLE UADD USUB UNARYOP WHILE WITH YIELD
-%token ALIAS KEYWORD ARGUMENTS COMPREHENSION TRUE FALSE 
+%token ALIAS KEYWORD ARGUMENTS COMPREHENSION TRUE FALSE INF NEGINF
 %token LINENO COLOFFSET
  
 %token LB RB LP RP COMMA EQUAL
@@ -21,9 +21,12 @@
 %token EOF
 
 %token <int> INUM
+%token <int> LNUM
 %token <float> FNUM
+%token <float> CNUM
 %token <string> ID
 %token <string> STRING
+%token <string> USTRING
 
 %start modu
 
@@ -79,8 +82,8 @@ stmt: FUNCTIONDEF LP STRING COMMA arguments COMMA LB stmt_list RB COMMA LB expr_
        { P.With($3, $5, $8, $11) }
    | RAISE LP expr_option COMMA expr_option COMMA expr_option COMMA loc RP 
        { P.Raise($3, $5, $7, $9) }
-   | TRYEXCEPT LP LB stmt_list RB COMMA excepthandler_option COMMA LB stmt_list RB COMMA loc RP 
-       { P.TryExcept($4, $7, $10, $13) }
+   | TRYEXCEPT LP LB stmt_list RB COMMA LB excepthandler_list RB COMMA LB stmt_list RB COMMA loc RP 
+       { P.TryExcept($4, $8, $12, $15) }
    | TRYFINALLY LP LB stmt_list RB COMMA LB stmt_list RB COMMA loc RP 
        { P.TryFinally($4, $8, $11) }
    | ASSERT LP expr COMMA expr_option COMMA loc RP 
@@ -117,7 +120,7 @@ expr: BOOLOP LP boolop COMMA LB expr_list RB COMMA loc RP { P.BoolOp ($3, $6, $9
    | UNARYOP LP unaryop COMMA expr COMMA loc RP { P.UnaryOp($3, $5, $7) }
    | LAMBDA LP arguments COMMA expr COMMA loc RP { P.Lambda($3, $5, $7) }
    | IFEXP LP expr COMMA expr COMMA expr COMMA loc RP { P.IfExp ($3, $5, $7, $9) }
-   | DICT LP LB expr_list RB COMMA LB expr_list RB COMMA loc { P.Dict($4, $8, $11) }
+   | DICT LP LB expr_list RB COMMA LB expr_list RB COMMA loc RP { P.Dict($4, $8, $11) }
    | SET LP LB expr_list RB COMMA loc RP { P.Set($4, $7) }
    | LISTCOMP LP expr COMMA LB comprehension_list RB COMMA loc RP { P.ListComp ($3, $6, $9) }
    | SETCOMP LP expr COMMA LB comprehension_list RB COMMA loc RP { P.SetComp($3, $6, $9) }
@@ -128,9 +131,14 @@ expr: BOOLOP LP boolop COMMA LB expr_list RB COMMA loc RP { P.BoolOp ($3, $6, $9
    | CALL LP expr COMMA LB expr_list RB COMMA LB keyword_list RB COMMA expr_option COMMA expr_option COMMA loc RP
        { P.Call($3, $6, $10, $13, $15, $17) }
    | REPR LP expr COMMA loc RP { P.Repr($3, $5) }
+   | NUM LP LNUM COMMA loc RP { P.Long($3, $5) }
+   | NUM LP CNUM COMMA loc RP { P.Complex(0.0, $3, $5) }       
    | NUM LP INUM COMMA loc RP { P.Int($3, $5) }
-   | NUM LP FNUM COMMA loc RP { P.Float($3, $5) }       
+   | NUM LP FNUM COMMA loc RP { P.Float($3, $5) }
+   | NUM LP NEGINF COMMA loc RP { P.Float(neg_infinity, $5) }
+   | NUM LP INF COMMA loc RP { P.Float(infinity, $5) }              
    | STR LP STRING COMMA loc RP { P.Str($3, $5) }
+   | STR LP USTRING COMMA loc RP { P.UStr($3, $5) }       
    | ATTRIBUTE LP expr COMMA STRING COMMA expr_context COMMA loc RP { P.Attribute($3, $5, $7, $9) }
    | SUBSCRIPT LP expr COMMA slice COMMA expr_context COMMA loc RP { P.Subscript($3, $5, $7, $9) }
    | NAME LP STRING COMMA expr_context COMMA loc RP { P.Name($3, $5, $7) }       
@@ -211,8 +219,9 @@ comprehension_list: /* epsilon */ { [] }
 comprehension: COMPREHENSION LP expr COMMA expr COMMA LB expr_list RB RP { ($3, $5, $8) }
 ;
 
-excepthandler_option: NONE { None }
-   | excepthandler { Some($1) }
+excepthandler_list: /* epsilon */ { [] }
+   | excepthandler { [$1] }
+   | excepthandler_list COMMA excepthandler { $1@[$3] }
 ;
 
 excepthandler: EXCEPTHANDLER LP expr_option COMMA expr_option COMMA LB stmt_list RB COMMA loc RP { P.ExceptHandler ($3, $5, $8, $11) }

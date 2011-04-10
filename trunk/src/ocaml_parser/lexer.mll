@@ -108,24 +108,50 @@
      ("arguments", ARGUMENTS);
      ("keyword", KEYWORD);
      ("comprehension", COMPREHENSION);
+     ("inf", INF);
      ("True", TRUE);
      ("False", FALSE);
     ]
 } 
 
 let blank = [' ' '\t']+
-let id = ['a'-'z' 'A'-'Z'](['a'-'z' 'A'-'Z' '\'' '0'-'9' '_'])*
-let fnumber = ['0'-'9']*'.'(['0'-'9']*)
-let inumber = ['0'-'9']+ | '-'['0'-'9']+
-
+let id = ['a'-'z' 'A'-'Z'](['a'-'z' 'A'-'Z' '0'-'9' '_'])*
+let float_number      = '-'? ['0'-'9']*'.'(['0'-'9']*)
+let complex_float_num = float_number 'j'
+let exp_number        = '-'? ['1'-'9'] ('.' (['0'-'9']+))? 'e' ('+'|'-') ['0'-'9']+
+let complex_exp_num   = exp_number 'j'
+let int_number        = '-'? ['0'-'9']+
+let complex_int_num   = int_number 'j'
+let long_number       = '-'? ['0'-'9']+'L'
 rule start =
   parse blank { start lexbuf }
     | "\r\n"     { incr_ln (); start lexbuf}
     | '\n'       { incr_ln (); start lexbuf}
-    | fnumber { verbose (Lexing.lexeme lexbuf); FNUM (float_of_string(Lexing.lexeme lexbuf)) }
-    | inumber { verbose (Lexing.lexeme lexbuf); INUM (int_of_string(Lexing.lexeme lexbuf)) }
+    | "-inf"     { NEGINF }
+    | exp_number { verbose (Lexing.lexeme lexbuf); FNUM (float_of_string(Lexing.lexeme lexbuf)) } (* float (exp) *)
+    | float_number { verbose (Lexing.lexeme lexbuf); FNUM (float_of_string(Lexing.lexeme lexbuf)) } (* float *)
+    | float_number { verbose (Lexing.lexeme lexbuf); FNUM (float_of_string(Lexing.lexeme lexbuf)) } (* float *)
+    | long_number { let str = Lexing.lexeme lexbuf in                                              (* long *)
+                let v = int_of_string(String.sub str 0 ((String.length str) - 1)) in
+                (verbose str; LNUM(v))
+              }
+    | complex_exp_num{ let str = Lexing.lexeme lexbuf in                                              (* complex, exp *)
+                let v = float_of_string(String.sub str 0 ((String.length str) - 1)) in
+                (verbose str; CNUM(v))
+              }        
+    | complex_float_num{ let str = Lexing.lexeme lexbuf in                                              (* complex, float *)
+                let v = float_of_string(String.sub str 0 ((String.length str) - 1)) in
+                (verbose str; CNUM(v))
+              }
+    | complex_int_num{ let str = Lexing.lexeme lexbuf in
+               let v = float_of_string(String.sub str 0 ((String.length str) - 1)) in           (* complex, int *)
+               (verbose str; CNUM(v))
+              }        
+    | int_number { verbose (Lexing.lexeme lexbuf); INUM (int_of_string(Lexing.lexeme lexbuf)) } (* int *)
+    | 'u' "\'" { unicode_single_quote "" lexbuf }
+    | 'u' "\"" { unicode_double_quote "" lexbuf }
     | id { let id = Lexing.lexeme lexbuf
-           in verbose id; try Hashtbl.find keyword_tbl id
+           in verbose ("ID:"^id); try Hashtbl.find keyword_tbl id
              with _ -> ID id
          }
     | eof { verbose "eof"; EOF}
@@ -155,3 +181,20 @@ and
       | [^'\\''\"']+   { double_quote (prefix^(Lexing.lexeme lexbuf)) lexbuf }
       | "\\"        { double_quote (prefix^"\\") lexbuf } 
       | "\""       { verbose prefix; STRING(prefix) }
+and unicode_single_quote prefix =
+    parse "\\'"   { unicode_single_quote (prefix^"\'") lexbuf }
+      | "\\n"      { unicode_single_quote (prefix^"\n") lexbuf }
+      | "\\t"      { unicode_single_quote (prefix^"\t") lexbuf }
+      | "\\\\"        { unicode_single_quote (prefix^"\\") lexbuf }           
+      | [^'\\''\'']+   { unicode_single_quote (prefix^(Lexing.lexeme lexbuf)) lexbuf }
+      | "\\"        { unicode_single_quote (prefix^"\\") lexbuf } 
+      | "'"        { verbose ("Unicode:"^prefix); USTRING(prefix) }
+and
+  unicode_double_quote prefix =
+    parse "\\\""   { unicode_double_quote (prefix^"\"") lexbuf }
+      | "\\n"      { unicode_double_quote (prefix^"\n") lexbuf }
+      | "\\t"      { unicode_double_quote (prefix^"\t") lexbuf }           
+      | "\\\\"        { unicode_double_quote (prefix^"\\") lexbuf } 
+      | [^'\\''\"']+   { unicode_double_quote (prefix^(Lexing.lexeme lexbuf)) lexbuf }
+      | "\\"        { unicode_double_quote (prefix^"\\") lexbuf } 
+      | "\""       { verbose ("Unicode:"^prefix); USTRING(prefix) }
