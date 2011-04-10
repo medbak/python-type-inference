@@ -8,11 +8,11 @@
  * Type definition
  * Reference: http://docs.python.org/library/ast.html
  *)
-type loc = int * int (* line number * column offset *)
+type loc = int * int                 (* line number * column offset *)
 type identifier = string
 type modu = Module of stmt list
-           | Interactive of stmt list
-           | Expression of expr
+            | Interactive of stmt list
+            | Expression of expr
 and	stmt = FunctionDef of string * arguments * stmt list * expr list * loc
 	       | ClassDef of string * expr list * stmt list * expr list * loc
 	       | Return of expr option * loc
@@ -37,36 +37,36 @@ and	stmt = FunctionDef of string * arguments * stmt list * expr list * loc
            | Break of loc
            | Continue of loc
 and	expr = BoolOp of boolop * expr list * loc
-	     | BinOp of expr * operator * expr * loc
-	     | UnaryOp of unaryop * expr * loc
-	     | Lambda of arguments * expr * loc
-	     | IfExp of expr * expr * expr * loc
-	     | Dict of expr list * expr list * loc
-	     | Set of expr list * loc
-	     | ListComp of expr * comprehension list * loc
-	     | SetComp of expr * comprehension list * loc
-	     | DictComp of expr * expr * comprehension list * loc
-	     | GeneratorExp of expr * comprehension list * loc
-	     | Yield of expr option * loc
-	     | Compare of expr * cmpop list * expr list * loc
-	     | Call of expr * expr list * keyword list * expr option * expr option * loc
-	     | Repr of expr * loc
-	     | Int of int * loc      (* in Python side AST, there is only Num for int and float *)
-         | Float of float * loc 
-         | Bool of bool * loc    (* in Python side AST, there is no bool, it's just Name('True') and Name('False') *)
-	     | Str of string * loc
-	     | Attribute of expr * identifier * expr_context * loc
-	     | Subscript of expr * slice * expr_context * loc
-	     | Name of identifier * expr_context * loc
-	     | List of expr list * expr_context * loc
-	     | Tuple of expr list * expr_context * loc
+	       | BinOp of expr * operator * expr * loc
+	       | UnaryOp of unaryop * expr * loc
+	       | Lambda of arguments * expr * loc
+	       | IfExp of expr * expr * expr * loc
+	       | Dict of expr list * expr list * loc
+	       | Set of expr list * loc
+	       | ListComp of expr * comprehension list * loc
+	       | SetComp of expr * comprehension list * loc
+	       | DictComp of expr * expr * comprehension list * loc
+	       | GeneratorExp of expr * comprehension list * loc
+	       | Yield of expr option * loc
+	       | Compare of expr * cmpop list * expr list * loc
+	       | Call of expr * expr list * keyword list * expr option * expr option * loc
+	       | Repr of expr * loc
+	       | Int of int * loc          (* in Python side AST, there is only Num for int and float *)
+           | Float of float * loc 
+           | Bool of bool * loc        (* in Python side AST, there is no bool, it's just Name('True') and Name('False') *)
+	       | Str of string * loc
+	       | Attribute of expr * identifier * expr_context * loc
+	       | Subscript of expr * slice * expr_context * loc
+	       | Name of identifier * expr_context * loc
+	       | List of expr list * expr_context * loc
+	       | Tuple of expr list * expr_context * loc
 and expr_context = Load | Store | Del | AugLoad | AugStore | Param
 and	slice = Ellipsis | Slice of expr option * expr option * expr option
-	      | ExtSlice of slice list
-	      | Index of expr
+	        | ExtSlice of slice list
+	        | Index of expr
 and	boolop = And | Or 
 and	operator = Add | Sub | Mult | Div | Mod | Pow | LShift 
-  | RShift | BitOr | BitXor | BitAnd | FloorDiv
+               | RShift | BitOr | BitXor | BitAnd | FloorDiv
 and	unaryop = Invert | Not | UAdd | USub
 and	cmpop = Eq | NotEq | Lt | LtE | Gt | GtE | Is | IsNot | In | NotIn
 and	comprehension = expr * expr * expr list
@@ -75,13 +75,13 @@ and	arguments = expr list * identifier option * identifier option * expr list
 and keyword = identifier * expr
 and alias = identifier * identifier option
 
-(* types in M  *)
-type types = TyInt                     (* integer type *)
-           | TyBool                    (* boolean type *)
-           | TyString                  (* string type *)
-           | TyTuple of types list     (* tuple type *)
-           | TyArrow of types * types  (* function type *)
-           | TyUnion of types list     (* union type *)
+(* types in Python *)
+type types = TyInt                      (* integer type *)
+             | TyBool                   (* boolean type *)
+             | TyString                 (* string type *)
+             | TyTuple of types list    (* tuple type *)
+             | TyArrow of types * types (* function type *)
+             | TyUnion of types list    (* union type *)
 
 (* errors *)
 exception RuntimeError of string
