@@ -7,7 +7,7 @@
 {
   open Parser
   open Error
-  let debug_tag = true
+  let debug_tag = false
   let verbose s =  if debug_tag then (print_string s; print_newline())
   let comment_depth = ref 0
   let keyword_tbl = Hashtbl.create 111
@@ -74,6 +74,7 @@
      ("Not", NOT);
      ("NotEq", NOTEQ);
      ("NotIn", NOTIN);
+     ("None", NONE);
      ("Num", NUM);
      ("Or", OR);
      ("Param", PARAM);
@@ -104,26 +105,29 @@
      ("lineno", LINENO);
      ("col_offset", COLOFFSET);
      ("alias", ALIAS);
+     ("arguments", ARGUMENTS);
+     ("keyword", KEYWORD);
+     ("comprehension", COMPREHENSION);
+     ("True", TRUE);
+     ("False", FALSE);
     ]
 } 
 
 let blank = [' ' '\t']+
 let id = ['a'-'z' 'A'-'Z'](['a'-'z' 'A'-'Z' '\'' '0'-'9' '_'])*
-let fnumber = ['0'-'9']'.'(['0'-'9']*)
-let inumber = ['0'-'9']+
-let charstring = "'" [^ '\'' '\n']* "'"
+let fnumber = ['0'-'9']*'.'(['0'-'9']*)
+let inumber = ['0'-'9']+ | '-'['0'-'9']+
 
 rule start =
   parse blank { start lexbuf }
     | "\r\n"     { incr_ln (); start lexbuf}
     | '\n'       { incr_ln (); start lexbuf}
-    | fnumber { FNUM (float_of_string(Lexing.lexeme lexbuf)) }
-    | inumber { INUM (int_of_string(Lexing.lexeme lexbuf)) }
+    | fnumber { verbose (Lexing.lexeme lexbuf); FNUM (float_of_string(Lexing.lexeme lexbuf)) }
+    | inumber { verbose (Lexing.lexeme lexbuf); INUM (int_of_string(Lexing.lexeme lexbuf)) }
     | id { let id = Lexing.lexeme lexbuf
            in verbose id; try Hashtbl.find keyword_tbl id
              with _ -> ID id
          }
-    | charstring { verbose (Lexing.lexeme lexbuf); STRING(Lexing.lexeme lexbuf) }         
     | eof { verbose "eof"; EOF}
     | "[" { verbose "["; LB}
     | "]" { verbose "]"; RB}
@@ -131,4 +135,23 @@ rule start =
     | ")" { verbose ")"; RP}
     | "=" { verbose "="; EQUAL}
     | "," { verbose ","; COMMA}
+    | "'" { single_quote "" lexbuf }
+    | "\"" { double_quote "" lexbuf }
     | _ {raise (Lex_err("illical token "^(Lexing.lexeme lexbuf), get_ln()))} 
+and single_quote prefix =
+    parse "\\'"   { single_quote (prefix^"\'") lexbuf }
+      | "\\n"      { single_quote (prefix^"\n") lexbuf }
+      | "\\t"      { single_quote (prefix^"\t") lexbuf }
+      | "\\\\"        { single_quote (prefix^"\\") lexbuf }           
+      | [^'\\''\'']+   { single_quote (prefix^(Lexing.lexeme lexbuf)) lexbuf }
+      | "\\"        { single_quote (prefix^"\\") lexbuf } 
+      | "'"        { verbose prefix; STRING(prefix) }
+and
+  double_quote prefix =
+    parse "\\\""   { double_quote (prefix^"\"") lexbuf }
+      | "\\n"      { double_quote (prefix^"\n") lexbuf }
+      | "\\t"      { double_quote (prefix^"\t") lexbuf }           
+      | "\\\\"        { double_quote (prefix^"\\") lexbuf } 
+      | [^'\\''\"']+   { double_quote (prefix^(Lexing.lexeme lexbuf)) lexbuf }
+      | "\\"        { double_quote (prefix^"\\") lexbuf } 
+      | "\""       { verbose prefix; STRING(prefix) }

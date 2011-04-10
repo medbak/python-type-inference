@@ -53,7 +53,7 @@ and	expr = BoolOp of boolop * expr list * loc
 	       | Repr of expr * loc
 	       | Int of int * loc          (* in Python side AST, there is only Num for int and float *)
            | Float of float * loc 
-           | Bool of bool * loc        (* in Python side AST, there is no bool, it's just Name('True') and Name('False') *)
+(*         | Bool of bool * loc        (* in Python side AST, there is no bool, it's just Name('True') and Name('False') *) *)
 	       | Str of string * loc
 	       | Attribute of expr * identifier * expr_context * loc
 	       | Subscript of expr * slice * expr_context * loc
