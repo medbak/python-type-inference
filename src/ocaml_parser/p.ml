@@ -25,7 +25,7 @@ and	stmt = FunctionDef of string * arguments * stmt list * expr list * loc
 	       | If of expr * stmt list * stmt list * loc
 	       | With of expr * expr option * stmt list * loc
 	       | Raise of expr option * expr option * expr option * loc
-	       | TryExcept of stmt list * excepthandler option * stmt list * loc
+	       | TryExcept of stmt list * excepthandler list * stmt list * loc
 	       | TryFinally of stmt list * stmt list * loc
 	       | Assert of expr * expr option * loc
 	       | Import of alias list * loc
@@ -51,10 +51,13 @@ and	expr = BoolOp of boolop * expr list * loc
 	       | Compare of expr * cmpop list * expr list * loc
 	       | Call of expr * expr list * keyword list * expr option * expr option * loc
 	       | Repr of expr * loc
-	       | Int of int * loc          (* in Python side AST, there is only Num for int and float *)
-           | Float of float * loc 
+	       | Int of int * loc          (* in Python side AST, there is only Num for int, long, float, and complex type *)
+           | Long of int * loc 
+           | Float of float * loc
+           | Complex of float * float * loc                
 (*         | Bool of bool * loc        (* in Python side AST, there is no bool, it's just Name('True') and Name('False') *) *)
 	       | Str of string * loc
+	       | UStr of string * loc      (* Unicode String, start with Str(u'....') *)
 	       | Attribute of expr * identifier * expr_context * loc
 	       | Subscript of expr * slice * expr_context * loc
 	       | Name of identifier * expr_context * loc
