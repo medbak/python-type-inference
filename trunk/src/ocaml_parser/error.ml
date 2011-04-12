@@ -1,7 +1,7 @@
 (*
- * SNU 4190.310 Programming Languages (Fall 2010)
- *
  * Errors and handlers
+ *
+ * Soonho Kong (soonhok@cs.cmu.edu)
  *)
 
 exception Lex_err of string * int
