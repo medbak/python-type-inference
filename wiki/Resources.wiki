@@ -30,3 +30,4 @@ Python Language:
  * Tutorial: http://docs.python.org/2.7/tutorial/
  * Language definition: http://docs.python.org/2.7/reference/
  * Formal grammar spec: http://docs.python.org/2.7/reference/grammar.html
+ * Python Types and Objects : http://www.cafepy.com/article/python_types_and_objects
