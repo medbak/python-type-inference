@@ -17,6 +17,10 @@ Below are some of the papers we found relating to static analysis for Python and
  *  M Salib, “Starkiller: A static type inferencer and compiler for Python” (2004)
      * http://people.csail.mit.edu/jrb/Projects/starkiller.pdf (Master's Thesis)
      * http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.95.3786&rep=rep1&type=pdf (Conference version)
+ * Ole Agesen, "The Cartesian Product Algorithm : Simple and Precise Type Inference of Parametric Polymorphism" ECOOP’95
+     * http://labs.oracle.com/self/papers/cpa.ps.gz
+ * Steve Hano, "Type Inference Using the Cartesian Product Algorithm on a Dynamically Typed Language"
+     * http://stevehanov.ca/cs744_type_inference_project.pdf
 
 = Tools =
 Existing Python tools (limited to mostly syntactic checks):
@@ -31,3 +35,5 @@ Python Language:
  * Language definition: http://docs.python.org/2.7/reference/
  * Formal grammar spec: http://docs.python.org/2.7/reference/grammar.html
  * Python Types and Objects : http://www.cafepy.com/article/python_types_and_objects
+ * Python's Method Resolution Order algorithm : http://www.python.org/download/releases/does 2.3/mro/
+ * Python's Data Model : http://docs.python.org/reference/datamodel.html
