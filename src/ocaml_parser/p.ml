@@ -81,6 +81,7 @@ and alias = identifier * identifier option
 
 (* types in Python *)
 type types = TyInt                      (* integer type *)
+             | TyNone                   (* none type *)
              | TyBool                   (* boolean type *)
              | TyString                 (* string type *)
              | TyLong                   (* long type *)
@@ -94,6 +95,7 @@ type types = TyInt                      (* integer type *)
              | TyArrow of types * types (* function type *)
              | TyUnion of types list    (* union type *)
              | TyClass of types list    (* class type, with list of base classes *)
+
 
 (* errors *)
 exception RuntimeError of string
