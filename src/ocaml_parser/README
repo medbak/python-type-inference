@@ -1,5 +1,13 @@
+Requirement: Need to have the following OCaml packages installed:
+    - camomile  : Unicode Library camomile.sourceforge.net
+                  http://camomile.sourceforge.net
+    - findlib   : Library Manager
+                  http://projects.camlcity.org/projects/findlib.html
+    - batteries : Extended Libraries
+                  http://batteries.forge.ocamlcore.org/
+
 Compile:
-	ocamlbuild main.native
+	make
 
 Run:
 	./main.native <.ast>
