@@ -4,7 +4,7 @@
  * Main Interface
  *)
 
-open P
+open Ast
 
 let print_ast = ref false
 let spec = [
@@ -21,8 +21,9 @@ let run () =
       Error.init ();
       let lexbuf =
         Lexing.from_channel (if !src = "" then stdin else open_in !src) in
-      let modu = Parser.modu Lexer.start lexbuf in  
+      let modu = Parser.modu Lexer.start lexbuf in
+        Analysis.analysis Analysis.empty_env modu;
         print_string "== Parsing Completed ==\n"
     with v -> Error.handle_exn v 
 
-let _ = Printexc.catch run () 
+let _ = Printexc.catch run ()

@@ -1,11 +1,7 @@
 (*
  * Soonho Kong (soonhok@cs.cmu.edu)
  *
- * p.ml : Python AST
- *)
-
-(*
- * Type definition
+ * ast.ml : Python AST Type definition
  * Reference: http://docs.python.org/library/ast.html
  *)
 
@@ -78,25 +74,3 @@ and excepthandler = ExceptHandler of expr option * expr option * stmt list * loc
 and arguments = expr list * identifier option * identifier option * expr list
 and keyword = identifier * expr
 and alias = identifier * identifier option
-
-(* types in Python *)
-type types = TyInt                      (* integer type *)
-             | TyNone                   (* none type *)
-             | TyBool                   (* boolean type *)
-             | TyString                 (* string type *)
-             | TyLong                   (* long type *)
-             | TyFloat                  (* float type *)
-             | TyComplex                (* complex type *)
-             | TyObject                 (* object type *)
-             | TyType of types          (* type type *)
-             | TyList of types          (* list type *)
-             | TyDict of types * types  (* dictionary type *)
-             | TyTuple of types list    (* tuple type *)
-             | TyArrow of types * types (* function type *)
-             | TyUnion of types list    (* union type *)
-             | TyClass of types list    (* class type, with list of base classes *)
-
-
-(* errors *)
-exception RuntimeError of string
-exception TypeError of string
