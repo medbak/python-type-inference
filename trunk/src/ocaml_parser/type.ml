@@ -1,3 +1,4 @@
+open Batteries
 (*
  * Soonho Kong (soonhok@cs.cmu.edu)
  *
@@ -38,7 +39,11 @@ type ty = TyNone                     (* none type *)
           | TyType of ty                   (* type type *)
           | TyUnion of ty list             (* union type *)
           | TyClass of (string * ty) list  (* class type *)
-                 
+
+let join tylist = match BatList.sort_unique compare tylist with
+    ty::[] -> ty
+  | tylist' -> TyUnion tylist'
+
 (* errors *)
 exception RuntimeError of string
 exception TypeError of string
