@@ -36,8 +36,23 @@ let amodule env modu = match modu with
     List.fold_left astat env stmts
   | Expression e -> env
 
+let acomp env comp =
+  raise NotImplemented
+    
 let aexp env exp =
-  let rec aexp_aux env exp = match exp with
+  let rec aexp_aux env exp =
+    let process_list env expr_list =
+      let (ty_list, env') = 
+        List.fold_left
+          (fun (ty_list, env) exp ->
+            let (ty, env') = aexp_aux env exp in
+            (ty::ty_list, env'))
+          ([], env)
+          expr_list
+      in
+      (Type.normalize ty_list, env')
+    in
+    match exp with
       (* The Boolean operations "or" and "and" always return one of their operands 
        * For example: [1,2,3] and 7 and [4,5,6] = [4,5,6]
        * These operations are "short-circuit" operations. However, we assume that it's not short-circuit.
@@ -46,15 +61,11 @@ let aexp env exp =
        *) 
     | BoolOp (op, values, loc) ->
       let (ty_list, env') =
-        List.fold_left
-          (fun (ty_list, env) exp ->
-            let (ty, env') = aexp_aux env exp in
-            (ty::ty_list, env'))
-          ([], env)
-          values
+        process_list env values
       in
       (TyUnion ty_list, env')
-    | BinOp (left, op, right, loc) ->
+    (* TODO : Not implemented *)
+    | BinOp (left, op, right, loc) -> 
       begin match op with
         | Add
         | Sub
@@ -67,8 +78,9 @@ let aexp env exp =
         | BitOr
         | BitXor
         | BitAnd
-        | FloorDiv -> raise NotImplemented
+        | FloorDiv -> raise NotImplemented                        
       end
+    (* TODO : Not implemented *)
     | UnaryOp (op, expr, loc) ->
       begin match op with
         | Invert
@@ -76,22 +88,68 @@ let aexp env exp =
         | UAdd
         | USub -> raise NotImplemented
       end
+    (* TODO : Not implemented *)
     | Lambda (args, body, loc) -> raise NotImplemented
     | IfExp (bexpr, true_expr, false_expr, loc) ->
       let (_, env') = aexp_aux env bexpr in
       let (true_ty, true_env) = aexp_aux env' true_expr in
       let (false_ty, false_env) = aexp_aux env' false_expr in
       (Type.join [true_ty; false_ty], Env.join true_env false_env)
-
-    | Dict (keys, values, loc) -> raise NotImplemented
-    | Set (elts, loc) -> raise NotImplemented
-    | ListComp (expr, comprehensions, loc) -> raise NotImplemented
-    | SetComp (expr, comprehensions, loc) -> raise NotImplemented
-    | DictComp (expr1, expr2, comprehensions, loc) -> raise NotImplemented
+    | Dict (keys, values, loc) ->
+      let (env', key_value_ty_list) = 
+        List.fold_left2
+          (fun (env, result)  key_expr value_expr ->
+            let (key_ty, env') = aexp_aux env key_expr in
+            let (value_ty, env'') = aexp_aux env' value_expr in
+            (env'', (key_ty, value_ty)::result)
+          )
+          (env, [])
+          keys
+          values
+      in
+      (TyDict (Type.normalize key_value_ty_list), env')
+    | Set (elts, loc) ->
+      let (ty_list, env') =
+        process_list env elts
+      in
+      (TySet ty_list, env')
+    (* List Comprehensions: PEP 202 http://www.python.org/dev/peps/pep-0202/ *)
+    | ListComp (expr, comprehensions, loc) ->
+      let env' = 
+        List.fold_left
+          (fun env comp -> acomp env comprehensions)
+          env
+          comprehensions
+      in
+      aexp_aux env' expr
+    | SetComp (expr, comprehensions, loc) ->
+      let env' = 
+        List.fold_left
+          (fun env comp -> acomp env comprehensions)
+          env
+          comprehensions
+      in
+      aexp_aux env' expr
+    (* Dictionary Comprehensions: PEP 274 http://www.python.org/dev/peps/pep-0274/ *)
+    | DictComp (expr1, expr2, comprehensions, loc) ->
+      let env' = 
+        List.fold_left
+          (fun env comp -> acomp env comprehensions)
+          env
+          comprehensions
+      in
+      let (ty1, env'') = aexp_aux env' expr1 in
+      let (ty2, env''') = aexp_aux env'' expr2 in
+      (TyDict [(ty1, ty2)], env''')
+    (* TODO : Not implemented *)
     | GeneratorExp (expr, comprehensions, loc) -> raise NotImplemented
-    | Yield (expr_option, loc) -> raise NotImplemented 
+    (* TODO : Not implemented *)
+    | Yield (expr_option, loc) -> raise NotImplemented
+    (* TODO : Not implemented *)
     | Compare (expr, cmpops, exprs, loc) -> raise NotImplemented
+    (* TODO : Not implemented *)
     | Call (expr, exprs, keywords, expr1_option, expr2_option, loc) -> raise NotImplemented
+    (* TODO : Not implemented *)
     | Repr (expr, loc) -> raise NotImplemented
     | Int (_, loc) -> (TyInt, env)
     | Long (_, loc) -> (TyLong, env)
@@ -99,7 +157,9 @@ let aexp env exp =
     | Complex (_, _, loc) -> (TyComplex, env)
     | Str (_, loc) -> (TyString, env)
     | UStr (string, loc) -> (TyUnicode, env)
+    (* TODO : Not implemented *)
     | Attribute (expr, identifier, expr_context, loc) -> raise NotImplemented
+    (* TODO : Not implemented *)      
     | Subscript (expr, slice, expr_context, loc) -> raise NotImplemented
     | Name (id, ctx, loc) ->
       begin
@@ -107,9 +167,16 @@ let aexp env exp =
           (PMap.find id env, env)
         with Not_found -> raise (TypeError ("Name " ^ id ^ " is not in the environment"))
       end
-    | List (exprs, expr_context, loc) -> raise NotImplemented
-    | Tuple (exprs, expr_context, loc) -> raise NotImplemented
+    | List (exprs, expr_context, loc) ->
+      let (ty_list, env') =
+        process_list env exprs
+      in
+      (TySet ty_list, env')
+    | Tuple (exprs, expr_context, loc) ->
+      let (ty_list, env') =
+        process_list env exprs
+      in
+      (TySet ty_list, env')
   in
   aexp_aux env exp
-
 let analysis = amodule

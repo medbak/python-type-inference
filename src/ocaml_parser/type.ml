@@ -40,7 +40,9 @@ type ty = TyNone                     (* none type *)
           | TyUnion of ty list             (* union type *)
           | TyClass of (string * ty) list  (* class type *)
 
-let join tylist = match BatList.sort_unique compare tylist with
+let normalize tylist = BatList.sort_unique compare tylist              
+              
+let join tylist = match normalize tylist with
     ty::[] -> ty
   | tylist' -> TyUnion tylist'
 
