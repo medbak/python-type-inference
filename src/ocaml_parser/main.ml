@@ -22,8 +22,8 @@ let run () =
       let lexbuf =
         Lexing.from_channel (if !src = "" then stdin else open_in !src) in
       let modu = Parser.modu Lexer.start lexbuf in
-        Analysis.analysis Env.empty_env modu;
-        print_string "== Parsing Completed ==\n"
+      let env_result = Analysis.analysis Env.empty_env modu in
+      print_string (Env.to_string env_result)
     with v -> Error.handle_exn v 
 
 let _ = Printexc.catch run ()
