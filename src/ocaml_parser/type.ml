@@ -1,4 +1,5 @@
 open Batteries
+exception NotImplemented
 (*
  * Soonho Kong (soonhok@cs.cmu.edu)
  *
@@ -32,7 +33,7 @@ type ty = TyNone                     (* none type *)
           (* callable *)
           (* Built-in/User-defined functions *)
           (* Built-in/User-defined methods *)
-          | TyFunction of (ty list -> ty)
+          | TyFunction of (ty list * ty)
           (* Generator functions *)
           | TyGenerator of ty list
           | TyObject                       (* object type *)
@@ -46,6 +47,55 @@ let join tylist = match normalize tylist with
     ty::[] -> ty
   | tylist' -> TyUnion tylist'
 
+
+let to_strings ty_list to_string = match ty_list with
+    [] -> ""
+  | ty::[] -> to_string ty
+  | ty::tys -> (to_string ty) ^
+    (List.fold_left
+       (fun str ty -> str ^ ", " ^ (to_string ty))
+       ""
+       tys)
+    
+let rec to_string ty = match ty with
+  TyNone -> "TyNone"
+  | TyVar x -> "TyVar(" ^ (string_of_int x) ^ ")"
+  | TyNotImplemented -> "TyNotImplemented"
+  | TyEllipsis -> "TyEllipsis"
+  | TyInt -> "TyInt"
+  | TyLong -> "TyLong"
+  | TyBool -> "TyBool"    
+  | TyFloat -> "TyFloat"    
+  | TyComplex -> "TyComplex"   
+  | TyString -> "TyString"
+  | TyUnicode -> "TyUnicode"
+  | TyTuple tylist -> "TyTuple(" ^ (to_strings tylist to_string) ^ ")"
+  | TyList tylist -> "TyList(" ^ (to_strings tylist to_string) ^ ")"
+  | TyByteArray -> "TyByteArray"
+  | TySet tylist -> "TySet(" ^ (to_strings tylist to_string) ^ ")"
+  | TyFrozenSet tylist -> "TyFrozenSet(" ^ (to_strings tylist to_string) ^ ")"
+  | TyDict tyty_list ->
+    "TyDict(" ^
+      (to_strings tyty_list
+         (fun (ty1, ty2) ->
+           "(" ^ (to_string ty1) ^ "-> " ^ (to_string ty2) ^ ")"
+         )
+      )
+    ^ ")"
+  | TyFunction (tylist, ty) -> "TyFunction{(" ^ (to_strings tylist to_string)  ^") -> " ^ (to_string ty) ^ "}"
+  | TyGenerator tylist -> "TyGenerator(" ^ (to_strings tylist to_string) ^ ")"
+  | TyObject -> "TyObject"  
+  | TyType ty -> "TyType(" ^ to_string ty ^ ")"            
+  | TyUnion tylist -> "TyUnion(" ^ (to_strings tylist to_string) ^ ")"
+  | TyClass idty_list ->
+    "TyClass(" ^
+      (to_strings idty_list
+         (fun (id, ty2) ->
+           "(" ^ id ^ ": " ^ (to_string ty2) ^ ")"
+         )
+      )
+    ^ ")"
+      
 (* errors *)
 exception RuntimeError of string
 exception TypeError of string

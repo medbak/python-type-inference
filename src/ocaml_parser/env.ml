@@ -16,3 +16,11 @@ let join env1 env2 =
     )
     env1
     env2
+
+let to_string env =
+  PMap.foldi
+    (fun key value str ->
+      str ^ key ^ " ==> " ^ (Type.to_string value) ^ "\n")
+    env
+    ""
+(* PMap.foldi    ('a -> 'b -> 'c -> 'c) -> ('a, 'b) Batteries.PMap.t -> 'c -> 'c = <fun> *)
