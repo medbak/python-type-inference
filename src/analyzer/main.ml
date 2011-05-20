@@ -22,8 +22,10 @@ let run () =
       let lexbuf =
         Lexing.from_channel (if !src = "" then stdin else open_in !src) in
       let modu = Parser.modu Lexer.start lexbuf in
-      let env_result = Analysis.analysis Env.empty_env modu in
-      print_string (Env.to_string env_result)
+      let envop_result = Analysis.analysis Env.empty_env modu in
+      match envop_result with
+          None -> print_string "None"
+        | Some env_result -> print_string (Env.to_string env_result)
     with v -> Error.handle_exn v 
 
 let _ = Printexc.catch run ()
