@@ -48,7 +48,7 @@ and aexp env exp = match exp with
       aexp_list env values
     in
     (TyUnion (Type.normalize ty_list), env')
-    (* TODO : Not implemented *)
+  (* TODO : Not implemented *)
   | BinOp (left, op, right, loc) -> 
     begin match op with
       | Add
@@ -64,7 +64,7 @@ and aexp env exp = match exp with
       | BitAnd
       | FloorDiv -> raise (NotImplemented "BinOP")
     end
-    (* TODO : Not implemented *)
+  (* TODO : Not implemented *)
   | UnaryOp (op, exp, loc) ->
     begin match op with
       | Invert
@@ -72,7 +72,7 @@ and aexp env exp = match exp with
       | UAdd
       | USub -> raise (NotImplemented "UnaryOp")
     end
-    (* TODO : Not implemented *)
+  (* TODO : Not implemented *)
   | Lambda (args, body, loc) -> raise (NotImplemented "Lambda")
   | IfExp (bexp, true_exp, false_exp, loc) ->
     let (_, env') = aexp env bexp in
@@ -97,30 +97,30 @@ and aexp env exp = match exp with
       aexp_list env elts
     in
     (TySet (Type.normalize ty_list), env')
-    (* List Comprehensions: PEP 202 http://www.python.org/dev/peps/pep-0202/ *)
+  (* List Comprehensions: PEP 202 http://www.python.org/dev/peps/pep-0202/ *)
   | ListComp (exp, comprehensions, loc) ->
     let env' = List.fold_left acomp env comprehensions in
     aexp env' exp
   | SetComp (exp, comprehensions, loc) ->
     let env' = List.fold_left acomp env comprehensions in
     aexp env' exp
-    (* Dictionary Comprehensions: PEP 274 http://www.python.org/dev/peps/pep-0274/ *)
+  (* Dictionary Comprehensions: PEP 274 http://www.python.org/dev/peps/pep-0274/ *)
   | DictComp (exp1, exp2, comprehensions, loc) ->
     let env' = List.fold_left acomp env comprehensions in
     let (ty1, env'') = aexp env' exp1 in
     let (ty2, env''') = aexp env'' exp2 in
     (TyDict [(ty1, ty2)], env''')
-    (* TODO : Not implemented *)
+  (* TODO : Not implemented *)
   | GeneratorExp (exp, comprehensions, loc) -> raise (NotImplemented "Generator")
-    (* TODO : Not implemented *)
+  (* TODO : Not implemented *)
   | Yield (exp_option, loc) -> raise (NotImplemented "Yield")
-    (* TODO : Not implemented *)
+  (* TODO : Not implemented *)
   | Compare (exp, cmpops, exps, loc) -> raise (NotImplemented "Compare")
-    (* TODO : Not implemented *)
+  (* TODO : Not implemented *)
   | Call (exp, exps, keywords, exp1_option, exp2_option, loc) -> raise (NotImplemented "Call")
-    (* "repr" expression `x` is not equivalent to the function call repr(x)
-     * function call repr(x) is overriden by the function definition of repr,
-     * but repr expression is not overriden by that. *)
+  (* "repr" expression `x` is not equivalent to the function call repr(x)
+   * function call repr(x) is overriden by the function definition of repr,
+   * but repr expression is not overriden by that. *)
   | Repr (exp, loc) -> let (ty, env') = aexp env exp in (TyString, env')
   | Int (_, loc) -> (TyInt, env)
   | Long (_, loc) -> (TyLong, env)
@@ -128,9 +128,9 @@ and aexp env exp = match exp with
   | Complex (_, _, loc) -> (TyComplex, env)
   | Str (_, loc) -> (TyString, env)
   | UStr (string, loc) -> (TyUnicode, env)
-    (* TODO: Need to extend to support non-class type.
-     * If exp_context is "Store()", and the object is allowed to have new field,
-     * then we need to add that field, instead of rasing type error. *)
+  (* TODO: Need to extend to support non-class type.
+   * If exp_context is "Store()", and the object is allowed to have new field,
+   * then we need to add that field, instead of rasing type error. *)
   | Attribute (exp, id, exp_context, loc) ->
     let (ty, env') = aexp env exp in
     begin
@@ -175,7 +175,7 @@ and atarget env target ty =
     | List (exp_list, exp_ctx, loc) 
     | Tuple (exp_list, exp_ctx, loc) ->
       begin
-      (* TODO: Extend to support any arbitrary iterable type *)
+        (* TODO: Extend to support any arbitrary iterable type *)
         match ty with
             TyString -> atarget_list env exp_list TyString
           | TyUnicode -> atarget_list env exp_list TyUnicode
@@ -210,52 +210,51 @@ let rec astat env stat =
       let (ty, env') = aexp env value in
       atarget_list env' targets ty
     (* TODO *)    
-        | AugAssign (target, op, value, loc) -> raise (NotImplemented "AugAssing")
-        | Print (dest_op, values, nl, loc) ->
-          let (ty, env') = match dest_op with
-              (* In extended print form, the first expression after
-                 the >> must evaluate to a “file-like” object,
-                 specifically an object that has a write() method *)
-              Some exp -> aexp env exp (* TODO: Restrict to have "write" method *)
-            | None -> (TyNone, env) in
-          let (ty_list, env'') = aexp_list env' values in
-          env''
+    | AugAssign (target, op, value, loc) -> raise (NotImplemented "AugAssing")
+    | Print (dest_op, values, nl, loc) ->
+      let (ty, env') = match dest_op with
+          (* In extended print form, the first expression after
+             the >> must evaluate to a “file-like” object,
+             specifically an object that has a write() method *)
+          Some exp -> aexp env exp (* TODO: Restrict to have "write" method *)
+        | None -> (TyNone, env) in
+      let (ty_list, env'') = aexp_list env' values in
+      env''
         (* TODO *)    
-        | For (target, iter, body, orelse, loc) -> raise (NotImplemented "For")
-    (* TODO *)    
-        | While (test, body, orelse, loc) -> raise (NotImplemented "While")
-    (* TODO *)    
-        | If (test, body, orelse, loc) ->
-          let (ty, env') = aexp env test in
-          let env_true = astat_list env' body in
-          let env_false = astat_list env' orelse in
-          Env.join env_true env_false
-    (* TODO *)    
-        | With (context_exp, op_vars, body, loc) -> raise (NotImplemented "With")
-    (* TODO *)    
-        | Raise (type_op, inst_op, tback_op, loc) -> raise (NotImplemented "Raise")
-    (* TODO *)    
-        | TryExcept (body, handlers, orelse, loc) -> raise (NotImplemented "TryExcept")
-    (* TODO *)    
-        | TryFinally (body, finalbody, loc) -> raise (NotImplemented "TryFinally")
-    (* TODO *)    
-        | Assert (test, msg_op, loc) -> raise (NotImplemented "Assert")
-    (* TODO *)    
-        | Import (names, loc) -> raise (NotImplemented "Import")
-    (* TODO *)    
-        | ImportFrom (module_op, names, level_op, loc) -> raise (NotImplemented "ImportFrom")
-    (* TODO *)    
-        | Exec (body, globals_op, locals_op, loc) -> raise (NotImplemented "Exec")
-    (* TODO *)    
-        | Global (names, loc) -> raise (NotImplemented "Global")
-    (* TODO *)    
-        | Expr (exp, loc) -> let (ty, env') = aexp env exp in env'
-        | Pass loc -> env
-    (* TODO *)    
-        | Break loc -> raise (NotImplemented "Break")
-    (* TODO *)    
-        | Continue loc -> raise (NotImplemented "Continue")
-          
+    | For (target, iter, body, orelse, loc) -> raise (NotImplemented "For")
+        (* TODO *)    
+    | While (test, body, orelse, loc) -> raise (NotImplemented "While")
+    | If (test, body, orelse, loc) ->
+      let (ty, env') = aexp env test in
+      let env_true = astat_list env' body in
+      let env_false = astat_list env' orelse in
+      Env.join env_true env_false
+        (* TODO *)    
+    | With (context_exp, op_vars, body, loc) -> raise (NotImplemented "With")
+        (* TODO *)    
+    | Raise (type_op, inst_op, tback_op, loc) -> raise (NotImplemented "Raise")
+        (* TODO *)    
+    | TryExcept (body, handlers, orelse, loc) -> raise (NotImplemented "TryExcept")
+        (* TODO *)    
+    | TryFinally (body, finalbody, loc) -> raise (NotImplemented "TryFinally")
+        (* TODO *)    
+    | Assert (test, msg_op, loc) -> raise (NotImplemented "Assert")
+        (* TODO *)    
+    | Import (names, loc) -> raise (NotImplemented "Import")
+        (* TODO *)    
+    | ImportFrom (module_op, names, level_op, loc) -> raise (NotImplemented "ImportFrom")
+        (* TODO *)    
+    | Exec (body, globals_op, locals_op, loc) -> raise (NotImplemented "Exec")
+        (* TODO *)    
+    | Global (names, loc) -> raise (NotImplemented "Global")
+        (* TODO *)    
+    | Expr (exp, loc) -> let (ty, env') = aexp env exp in env'
+    | Pass loc -> env
+        (* TODO *)    
+    | Break loc -> raise (NotImplemented "Break")
+        (* TODO *)    
+    | Continue loc -> raise (NotImplemented "Continue")
+      
 let amodule env modu = match modu with
     Module stmts ->
       List.fold_left astat env stmts
