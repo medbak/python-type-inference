@@ -3,6 +3,7 @@ open Ast
 open Type
 
 let empty_env = PMap.empty
+
 let join env1 env2 =
   PMap.foldi
     (fun key value1 env ->
@@ -17,10 +18,19 @@ let join env1 env2 =
     env1
     env2
 
+let order env1 env2 =
+  PMap.foldi
+    (fun key value1 result ->
+      try 
+        let value2 = PMap.find key env2 in
+        order value1 value2
+      with Not_found -> false)
+    env1
+    true
+    
 let to_string env =
   PMap.foldi
     (fun key value str ->
       str ^ key ^ " ==> " ^ (Type.to_string value) ^ "\n")
     env
     ""
-(* PMap.foldi    ('a -> 'b -> 'c -> 'c) -> ('a, 'b) Batteries.PMap.t -> 'c -> 'c = <fun> *)
