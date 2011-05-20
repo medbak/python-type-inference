@@ -4,6 +4,12 @@ open Type
 
 exception NotImplemented of string
 exception ShouldNotHappen of string
+
+type ctl =
+  | CtlBreak
+  | CtlContinue
+  | CtlReturn
+      
 (* TODO *)    
 let acomp env comp =
   raise (NotImplemented "acomp")
@@ -192,11 +198,17 @@ and atarget env target ty =
     | Attribute (exp, id, exp_ctx, loc) -> raise (NotImplemented "atarget/Attribute")
     | Subscript (exp, slice, exp_ctx, loc) -> raise (NotImplemented "atarget/Subscript")
     | _ -> raise (ShouldNotHappen "Target of assignment should be one of (name, list, tuple, attribute, and subscript).")
-let rec astat env stat =
-  let astat_list env stats =
-    List.fold_left (fun env stat -> astat env stat) env stats
-  in
-  match stat with
+
+let rec astat_list env envlist stat_list =
+  match stat_list with
+      [] -> (Some env, envlist)
+    | stat::stat_list ->
+      let (envop', envlist') = astat env envlist stat in
+      match envop' with
+          None -> (None, envlist')
+        | Some env' ->  astat_list env' envlist' stat_list
+and astat env envlist stat =
+  match stat with 
     (* TODO *)    
     | FunctionDef (name, args, body, decorator_list, loc) -> raise (NotImplemented "FunctionDef")
     (* TODO *)    
@@ -208,7 +220,7 @@ let rec astat env stat =
     (* TODO *)    
     | Assign (targets, value, loc) ->
       let (ty, env') = aexp env value in
-      atarget_list env' targets ty
+      (Some (atarget_list env' targets ty), envlist)
     (* TODO *)    
     | AugAssign (target, op, value, loc) -> raise (NotImplemented "AugAssing")
     | Print (dest_op, values, nl, loc) ->
@@ -219,47 +231,48 @@ let rec astat env stat =
           Some exp -> aexp env exp (* TODO: Restrict to have "write" method *)
         | None -> (TyNone, env) in
       let (ty_list, env'') = aexp_list env' values in
-      env''
-        (* TODO *)    
+      (Some env'', envlist)
+    (* TODO *)    
     | For (target, iter, body, orelse, loc) -> raise (NotImplemented "For")
-        (* TODO *)    
+    (* TODO *)    
     | While (test, body, orelse, loc) -> raise (NotImplemented "While")
     | If (test, body, orelse, loc) ->
       let (ty, env') = aexp env test in
-      let env_true = astat_list env' body in
-      let env_false = astat_list env' orelse in
-      Env.join env_true env_false
-        (* TODO *)    
+      let (envop_t, envlist_t) = astat_list env' [] body in
+      let (envop_f, envlist_f) = astat_list env' [] orelse in
+      (Env.joinop envop_t envop_f, envlist @ envlist_t @ envlist_f)
+    (* TODO *)    
     | With (context_exp, op_vars, body, loc) -> raise (NotImplemented "With")
-        (* TODO *)    
+    (* TODO *)    
     | Raise (type_op, inst_op, tback_op, loc) -> raise (NotImplemented "Raise")
-        (* TODO *)    
+    (* TODO *)    
     | TryExcept (body, handlers, orelse, loc) -> raise (NotImplemented "TryExcept")
-        (* TODO *)    
+    (* TODO *)    
     | TryFinally (body, finalbody, loc) -> raise (NotImplemented "TryFinally")
-        (* TODO *)    
+    (* TODO *)    
     | Assert (test, msg_op, loc) -> raise (NotImplemented "Assert")
-        (* TODO *)    
+    (* TODO *)    
     | Import (names, loc) -> raise (NotImplemented "Import")
-        (* TODO *)    
+    (* TODO *)    
     | ImportFrom (module_op, names, level_op, loc) -> raise (NotImplemented "ImportFrom")
-        (* TODO *)    
+    (* TODO *)    
     | Exec (body, globals_op, locals_op, loc) -> raise (NotImplemented "Exec")
-        (* TODO *)    
+    (* TODO *)    
     | Global (names, loc) -> raise (NotImplemented "Global")
-        (* TODO *)    
-    | Expr (exp, loc) -> let (ty, env') = aexp env exp in env'
-    | Pass loc -> env
-        (* TODO *)    
-    | Break loc -> raise (NotImplemented "Break")
-        (* TODO *)    
-    | Continue loc -> raise (NotImplemented "Continue")
+    | Expr (exp, loc) ->
+      let (ty, env') = aexp env exp in
+      (Some env', [])
+    | Pass loc -> (Some env, [])
+    | Break loc -> (None, [(env, CtlBreak)])
+    | Continue loc -> (None, [(env, CtlContinue)])
       
 let amodule env modu = match modu with
     Module stmts ->
-      List.fold_left astat env stmts
+      fst (astat_list env [] stmts)
   | Interactive stmts ->
-    List.fold_left astat env stmts
-  | Expression e -> env
+    fst (astat_list env [] stmts)
+  | Expression exp ->
+    let (ty, env') = aexp env exp
+    in Some (PMap.add "it" ty env')
 
 let analysis = amodule

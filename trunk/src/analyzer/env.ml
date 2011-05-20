@@ -18,6 +18,12 @@ let join env1 env2 =
     env1
     env2
 
+let joinop envop1 envop2 = match (envop1, envop2) with
+    (None, None) -> None
+  | (Some env, None) -> Some env
+  | (None, Some env) -> Some env
+  | (Some env1, Some env2) -> Some (join env1 env2)
+
 let order env1 env2 =
   PMap.foldi
     (fun key value1 result ->
