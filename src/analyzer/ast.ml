@@ -74,3 +74,56 @@ and excepthandler = ExceptHandler of expr option * expr option * stmt list * loc
 and arguments = expr list * identifier option * identifier option * expr list
 and keyword = identifier * expr
 and alias = identifier * identifier option
+
+let stmt2loc stmt = match stmt with
+    FunctionDef (_, _, _, _, loc) -> loc
+  | ClassDef (_, _, _, _, loc) -> loc
+  | Return (_, loc) -> loc
+  | Delete (_, loc) -> loc
+  | Assign (_, _, loc) -> loc
+  | AugAssign (_, _, _, loc) -> loc
+  | Print (_, _, _, loc) -> loc
+  | For (_, _, _, _, loc) -> loc
+  | While (_, _, _, loc) -> loc
+  | If (_, _, _, loc) -> loc
+  | With (_, _, _, loc) -> loc
+  | Raise (_, _, _, loc) -> loc
+  | TryExcept (_, _, _, loc) -> loc
+  | TryFinally (_, _, loc) -> loc
+  | Assert (_, _, loc) -> loc
+  | Import (_, loc) -> loc
+  | ImportFrom (_, _, _, loc) -> loc
+  | Exec (_, _, _, loc) -> loc
+  | Global (_, loc) -> loc 
+  | Expr (_, loc) -> loc 
+  | Pass loc -> loc
+  | Break loc -> loc
+  | Continue loc -> loc
+    
+let exp2loc exp = match exp with
+    BoolOp (_, _, loc) -> loc
+  | BinOp (_, _, _, loc) -> loc
+  | UnaryOp (_, _, loc) -> loc
+  | Lambda (_, _, loc) -> loc
+  | IfExp (_, _, _, loc) -> loc
+  | Dict (_, _, loc) -> loc
+  | Set (_, loc) -> loc
+  | ListComp (_, _, loc) -> loc
+  | SetComp (_, _, loc) -> loc
+  | DictComp (_, _, _, loc) -> loc
+  | GeneratorExp (_, _, loc) -> loc
+  | Yield (_, loc) -> loc
+  | Compare (_, _, _, loc) -> loc
+  | Call (_, _, _, _, _, loc) -> loc
+  | Repr (_, loc) -> loc
+  | Int (_, loc) -> loc      
+  | Long (_, loc) -> loc 
+  | Float (_, loc) -> loc
+  | Complex (_, _, loc) -> loc                
+  | Str (_, loc) -> loc
+  | UStr (_, loc) -> loc
+  | Attribute (_, _, _, loc) -> loc
+  | Subscript (_, _, _, loc) -> loc
+  | Name (_, _, loc) -> loc
+  | List (_, _, loc) -> loc
+  | Tuple (_, _, loc) -> loc    

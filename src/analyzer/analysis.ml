@@ -12,14 +12,14 @@ type ctl =
       
 (* TODO *)    
 let acomp env comp =
-  raise (NotImplemented "acomp")
+  env
 
 let rec aslice env slice =
   let aindex env exp =
     let (ty, env') = aexp env exp in
     if ty = TyInt then
       env'
-    else raise (TypeError "Slice should have int type.")
+    else raise (TypeError ("Slice should have int type.", Ast.exp2loc exp))
   in match slice with
       Ellipsis -> env
     (* TODO: Need to extract the constraint *)
@@ -116,10 +116,13 @@ and aexp env exp = match exp with
     let (ty1, env'') = aexp env' exp1 in
     let (ty2, env''') = aexp env'' exp2 in
     (TyDict [(ty1, ty2)], env''')
-  (* TODO : Not implemented *)
-  | GeneratorExp (exp, comprehensions, loc) -> raise (NotImplemented "Generator")
-  (* TODO : Not implemented *)
-  | Yield (exp_option, loc) -> raise (NotImplemented "Yield")
+  | GeneratorExp (exp, comprehensions, loc) ->
+    let env' = List.fold_left acomp env comprehensions in
+    let (ty, env'') = aexp env' exp in
+    (TyGenerator ty, env'')
+  | Yield (exp_option, loc) ->
+    let (ty, env') = aexp_op env exp_option in
+    (TyGenerator ty, env')
   (* TODO : Not implemented *)
   | Compare (exp, cmpops, exps, loc) -> raise (NotImplemented "Compare")
   (* TODO : Not implemented *)
@@ -146,9 +149,9 @@ and aexp env exp = match exp with
               try
                 let (attr_id, attr_ty) = List.find (fun (id', _) -> id = id') attr_list in
                 (attr_ty, env')
-              with Not_found -> raise (TypeError ("The object has no " ^ id ^" field."))
+              with Not_found -> raise (TypeError ("The object has no " ^ id ^" field.", loc))
             end
-        | _ -> raise (TypeError "Right hand side of attribute access should be object type.")
+        | _ -> raise (TypeError ("Right hand side of attribute access should be object type.", loc))
     end
   | Subscript (exp, slice, exp_context, loc) ->
     let (ty, env') = aexp env exp in
@@ -158,7 +161,7 @@ and aexp env exp = match exp with
     begin
       try
         (PMap.find id env, env)
-      with Not_found -> raise (TypeError ("Name " ^ id ^ " is not in the environment"))
+      with Not_found -> raise (TypeError ("Name " ^ id ^ " is not in the environment", loc))
     end
   | List (exps, exp_context, loc) ->
     let (ty_list, env') =
@@ -191,9 +194,9 @@ and atarget env target ty =
             begin
               try
                 List.fold_left2 atarget env exp_list ty_list
-              with Invalid_argument _ -> raise (TypeError "Invalid numbers")
+              with Invalid_argument _ -> raise (TypeError ("Invalid numbers", loc))
             end
-          | _ -> raise (TypeError ("Should be an iterable type but " ^ (Type.to_string ty)))
+          | _ -> raise (TypeError ("Should be an iterable type but " ^ (Type.to_string ty), loc))
       end      
     | Attribute (exp, id, exp_ctx, loc) -> raise (NotImplemented "atarget/Attribute")
     | Subscript (exp, slice, exp_ctx, loc) -> raise (NotImplemented "atarget/Subscript")
@@ -235,7 +238,10 @@ and astat env envlist stat =
     (* TODO *)    
     | For (target, iter, body, orelse, loc) -> raise (NotImplemented "For")
     (* TODO *)    
-    | While (test, body, orelse, loc) -> raise (NotImplemented "While")
+    | While (test, body, orelse, loc) ->
+      let (ty, env') = aexp env test in
+      let (envop, envlist') = astat_list env' [] body in
+      raise (NotImplemented "For Statement")
     | If (test, body, orelse, loc) ->
       let (ty, env') = aexp env test in
       let (envop_t, envlist_t) = astat_list env' [] body in

@@ -37,7 +37,7 @@ type ty =
   (* Built-in/User-defined methods *)
   | TyFunction of (ty list * ty)
   (* Generator functions *)
-  | TyGenerator of ty list
+  | TyGenerator of ty
   | TyObject                       (* object type *)
   | TyType of ty                   (* type type *)
   | TyUnion of ty list             (* union type *)
@@ -69,7 +69,7 @@ and order ty1 ty2 =
     | (TyList tylist1, TyList tylist2) -> order_list tylist1 tylist2
     | (TySet tylist1, TySet tylist2) -> order_set tylist1 tylist2
     | (TyFrozenSet tylist1, TyFrozenSet tylist2) -> order_set tylist1 tylist2
-    | (TyGenerator tylist1, TyGenerator tylist2) -> order_set tylist1 tylist2
+    | (TyGenerator ty1, TyGenerator ty2) -> order ty1 ty2
     | (TyType ty1, TyType ty2) -> order ty1 ty2
     | (TyUnion tylist1, TyUnion tylist2) -> order_set tylist1 tylist2
     | (TyDict tytylist1, TyDict tytylist2) -> raise NotImplemented                   (* TODO *)
@@ -114,7 +114,7 @@ let rec to_string ty = match ty with
       )
     ^ ")"
   | TyFunction (tylist, ty) -> "TyFunction{(" ^ (to_strings tylist to_string)  ^") -> " ^ (to_string ty) ^ "}"
-  | TyGenerator tylist -> "TyGenerator(" ^ (to_strings tylist to_string) ^ ")"
+  | TyGenerator ty -> "TyGenerator(" ^ (to_string ty) ^ ")"
   | TyObject -> "TyObject"  
   | TyType ty -> "TyType(" ^ to_string ty ^ ")"            
   | TyUnion tylist -> "TyUnion(" ^ (to_strings tylist to_string) ^ ")"
@@ -129,4 +129,4 @@ let rec to_string ty = match ty with
       
 (* errors *)
 exception RuntimeError of string
-exception TypeError of string
+exception TypeError of string * Ast.loc
