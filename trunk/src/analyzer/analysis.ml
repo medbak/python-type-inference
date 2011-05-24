@@ -1,20 +1,21 @@
+(* Soonho Kong (soonhok@cs.cmu.edu) *)
 open Batteries
 open Ast
 open Type
 
 exception NotImplemented of string
 exception ShouldNotHappen of string
-
+type env = (Ast.identifier, Type.ty) Batteries.PMap.t
 type ctl =
   | CtlBreak
   | CtlContinue
   | CtlReturn
       
 (* TODO *)
-let acomp env (target, iter, ifs) =
-  env
-    
-let rec aslice env slice =
+let rec acomp env (target, iter, ifs) =
+  let (ty, env') = aexp env iter in
+  raise (NotImplemented "acomp")
+and aslice env slice =
   let aindex env exp =
     let (ty, env') = aexp env exp in
     if ty = TyInt then
