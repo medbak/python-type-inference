@@ -1,4 +1,4 @@
 all:
-	ocamlbuild main.native -cflag -dtypes
+	ocamlbuild -classic-display main.native -cflag -dtypes
 clean:
 	rm -rf _build

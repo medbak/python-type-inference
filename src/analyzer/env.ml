@@ -1,6 +1,9 @@
+(* Soonho Kong (soonhok@cs.cmu.edu) *)
 open Batteries
 open Ast
 open Type
+
+type t = (string, Type.ty) Batteries.PMap.t
 
 let empty_env = PMap.empty
 

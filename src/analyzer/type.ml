@@ -1,11 +1,11 @@
-open Batteries
-exception NotImplemented
 (*
  * Soonho Kong (soonhok@cs.cmu.edu)
  *
  * type.ml : Python Type Definition
  * Reference : http://docs.python.org/reference/datamodel.html#the-standard-type-hierarchy
  *)
+open Batteries
+exception NotImplemented
 
 type ty =
   (* Bot is not a type in python, but we need it for analysis *)

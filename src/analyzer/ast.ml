@@ -1,11 +1,10 @@
-open Batteries
-  
 (*
  * Soonho Kong (soonhok@cs.cmu.edu)
  *
  * ast.ml : Python AST Type definition
  * Reference: http://docs.python.org/library/ast.html
  *)
+open Batteries
 
 type loc = int * int                 (* line number * column offset *)
 type identifier = string
