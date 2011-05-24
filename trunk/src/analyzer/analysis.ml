@@ -13,8 +13,15 @@ type ctl =
       
 (* TODO *)
 let rec acomp env (target, iter, ifs) =
-  let (ty, env') = aexp env iter in
-  raise (NotImplemented "acomp")
+  let (iter_ty, env') = aexp env iter in
+  let target_ty = match iter_ty with
+      TyList tylist -> Type.join (Type.normalize tylist)
+    | TyAList tylist -> Type.join tylist
+    | TyTuple tylist -> Type.join (Type.normalize tylist)
+    | TyATuple tylist -> Type.join tylist
+    | TyByteArray -> TyInt
+  in
+  atarget env' target target_ty
 and aslice env slice =
   let aindex env exp =
     let (ty, env') = aexp env exp in
@@ -107,10 +114,12 @@ and aexp env exp = match exp with
   (* List Comprehensions: PEP 202 http://www.python.org/dev/peps/pep-0202/ *)
   | ListComp (exp, comprehensions, loc) ->
     let env' = List.fold_left acomp env comprehensions in
-    aexp env' exp
+    let (ty, env'') = aexp env' exp in
+    (TyAList [ty], env'')
   | SetComp (exp, comprehensions, loc) ->
     let env' = List.fold_left acomp env comprehensions in
-    aexp env' exp
+    let (ty, env'') = aexp env' exp in
+    (TySet [ty], env'')
   (* Dictionary Comprehensions: PEP 274 http://www.python.org/dev/peps/pep-0274/ *)
   | DictComp (exp1, exp2, comprehensions, loc) ->
     let env' = List.fold_left acomp env comprehensions in
@@ -177,8 +186,7 @@ and aexp env exp = match exp with
       aexp_list env exps
     in
     (TyTuple ty_list, env')
-
-let rec atarget_list env target_list ty =
+and atarget_list env target_list ty =
   List.fold_left (fun env target -> atarget env target ty)
     env
     target_list
