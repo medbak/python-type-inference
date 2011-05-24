@@ -22,10 +22,14 @@ type ty =
   | TyFloat                  (* float type *)
   | TyComplex                (* complex type *)
   (* sequences *)
-  | TyString                 (* string type *)
-  | TyUnicode                (* unicode type *)
+  | TyString of int          (* string type *)
+  | TyAString                (* abstract string type *)
+  | TyUnicode of int         (* unicode type *)
+  | TyAUnicode               (* abstract unicode type *)
   | TyTuple of ty list       (* tuple *)
+  | TyATuple of ty list      (* abstract tuple *)
   | TyList of ty list        (* list type *)
+  | TyAList of ty list       (* abstract list type *)
   | TyByteArray              (* byte array *)
   (* sets *)              
   | TySet of ty list         (* set *)
@@ -98,10 +102,14 @@ let rec to_string ty = match ty with
   | TyBool -> "TyBool"    
   | TyFloat -> "TyFloat"    
   | TyComplex -> "TyComplex"   
-  | TyString -> "TyString"
-  | TyUnicode -> "TyUnicode"
+  | TyString i -> "TyString(" ^ (string_of_int i) ^")"
+  | TyAString -> "TyAString"
+  | TyUnicode i -> "TyUnicode(" ^ (string_of_int i) ^")"
+  | TyAUnicode -> "TyAUnicode"
   | TyTuple tylist -> "TyTuple(" ^ (to_strings tylist to_string) ^ ")"
+  | TyATuple tylist -> "TyATuple(" ^ (to_strings tylist to_string) ^ ")"
   | TyList tylist -> "TyList(" ^ (to_strings tylist to_string) ^ ")"
+  | TyAList tylist -> "TyAList(" ^ (to_strings tylist to_string) ^ ")"
   | TyByteArray -> "TyByteArray"
   | TySet tylist -> "TySet(" ^ (to_strings tylist to_string) ^ ")"
   | TyFrozenSet tylist -> "TyFrozenSet(" ^ (to_strings tylist to_string) ^ ")"

@@ -5,6 +5,7 @@
  *)
 
 {
+  open Batteries
   open Parser
   open Error
   let debug_tag = false
@@ -188,7 +189,7 @@ and unicode_single_quote prefix =
       | "\\\\"        { unicode_single_quote (prefix^"\\") lexbuf }           
       | [^'\\''\'']+   { unicode_single_quote (prefix^(Lexing.lexeme lexbuf)) lexbuf }
       | "\\"        { unicode_single_quote (prefix^"\\") lexbuf } 
-      | "'"        { verbose ("Unicode:"^prefix); USTRING(prefix) }
+      | "'"        { verbose ("Unicode:"^prefix); USTRING(UTF8.of_string prefix) }
 and
   unicode_double_quote prefix =
     parse "\\\""   { unicode_double_quote (prefix^"\"") lexbuf }
@@ -197,4 +198,4 @@ and
       | "\\\\"        { unicode_double_quote (prefix^"\\") lexbuf } 
       | [^'\\''\"']+   { unicode_double_quote (prefix^(Lexing.lexeme lexbuf)) lexbuf }
       | "\\"        { unicode_double_quote (prefix^"\\") lexbuf } 
-      | "\""       { verbose ("Unicode:"^prefix); USTRING(prefix) }
+      | "\""       { verbose ("Unicode:"^prefix); USTRING(UTF8.of_string prefix) }
