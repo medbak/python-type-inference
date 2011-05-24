@@ -1,3 +1,5 @@
+open Batteries
+  
 (*
  * Soonho Kong (soonhok@cs.cmu.edu)
  *
@@ -54,7 +56,7 @@ and expr = BoolOp of boolop * expr list * loc
            | Complex of float * float * loc                
 (*         | Bool of bool * loc        (* in Python side AST, there is no bool, it's just Name('True') and Name('False') *) *)
            | Str of string * loc
-           | UStr of string * loc      (* Unicode String, start with Str(u'....') *)
+           | UStr of UTF8.t * loc      (* Unicode String, start with Str(u'....') *)
            | Attribute of expr * identifier * expr_context * loc
            | Subscript of expr * slice * expr_context * loc
            | Name of identifier * expr_context * loc

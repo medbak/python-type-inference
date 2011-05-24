@@ -10,10 +10,10 @@ type ctl =
   | CtlContinue
   | CtlReturn
       
-(* TODO *)    
-let acomp env comp =
+(* TODO *)
+let acomp env (target, iter, ifs) =
   env
-
+    
 let rec aslice env slice =
   let aindex env exp =
     let (ty, env') = aexp env exp in
@@ -129,14 +129,17 @@ and aexp env exp = match exp with
   | Call (exp, exps, keywords, exp1_option, exp2_option, loc) -> raise (NotImplemented "Call")
   (* "repr" expression `x` is not equivalent to the function call repr(x)
    * function call repr(x) is overriden by the function definition of repr,
-   * but repr expression is not overriden by that. *)
-  | Repr (exp, loc) -> let (ty, env') = aexp env exp in (TyString, env')
+   * but repr expression is not overriden by that.
+   *
+   * http://docs.python.org/reference/expressions.html#string-conversions
+   *)
+  | Repr (exp, loc) -> let (ty, env') = aexp env exp in (TyAString, env')
   | Int (_, loc) -> (TyInt, env)
   | Long (_, loc) -> (TyLong, env)
   | Float (_, loc) -> (TyFloat, env)
   | Complex (_, _, loc) -> (TyComplex, env)
-  | Str (_, loc) -> (TyString, env)
-  | UStr (string, loc) -> (TyUnicode, env)
+  | Str (s, loc) -> (TyString (String.length s), env)
+  | UStr (s, loc) -> (TyUnicode (UTF8.length s), env)
   (* TODO: Need to extend to support non-class type.
    * If exp_context is "Store()", and the object is allowed to have new field,
    * then we need to add that field, instead of rasing type error. *)
@@ -178,6 +181,8 @@ let rec atarget_list env target_list ty =
   List.fold_left (fun env target -> atarget env target ty)
     env
     target_list
+(* atarget env target ty :
+ * Add (target : ty) into the environment env *)
 and atarget env target ty =
   match target with
       Name (id, exp_ctx, loc) -> PMap.add id ty env
@@ -186,8 +191,14 @@ and atarget env target ty =
       begin
         (* TODO: Extend to support any arbitrary iterable type *)
         match ty with
-            TyString -> atarget_list env exp_list TyString
-          | TyUnicode -> atarget_list env exp_list TyUnicode
+            TyString l ->
+              if List.length exp_list = l then atarget_list env exp_list (TyString 1)
+              else raise (TypeError ("Invalid numbers.", loc))
+          | TyAString -> raise (TypeError ("It should have string type, not abstract string type.", loc))
+          | TyUnicode l ->
+              if List.length exp_list = l then atarget_list env exp_list (TyUnicode 1)
+              else raise (TypeError ("Invalid numbers.", loc))
+          | TyAUnicode -> raise (TypeError ("It should have unicode type, not abstract unicode type.", loc))
           | TyByteArray -> atarget_list env exp_list TyInt
           | TyTuple ty_list
           | TyList ty_list ->

@@ -5,7 +5,7 @@
  */
 
 %{ 
-
+  open Batteries
 %}
 
 %token ADD AND ASSERT ASSIGN ATTRIBUTE AUGASSIGN AUGLOAD AUGSTORE BINOP BITAND BITOR BITXOR BOOLOP BOOLOP BREAK CALL CLASSDEF
@@ -26,7 +26,7 @@
 %token <float> CNUM
 %token <string> ID
 %token <string> STRING
-%token <string> USTRING
+%token <Batteries.UTF8.t> USTRING
 
 %start modu
 
