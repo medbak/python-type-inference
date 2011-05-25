@@ -1,4 +1,4 @@
-(* Soonho Kong (soonhok@cs.cmu.edu) *)
+(* Soonho Kong (soonhok@cs.cmu4.edu) *)
 open Batteries
 open Ast
 open Type
@@ -16,9 +16,9 @@ let rec acomp env (target, iter, ifs) =
   let (iter_ty, env') = aexp env iter in
   let target_ty = match iter_ty with
       TyList tylist -> Type.join (Type.normalize tylist)
-    | TyAList tylist -> Type.join tylist
+    | TyAList ty -> ty
     | TyTuple tylist -> Type.join (Type.normalize tylist)
-    | TyATuple tylist -> Type.join tylist
+    | TyATuple ty -> ty
     | TyByteArray -> TyInt
   in
   atarget env' target target_ty
@@ -110,16 +110,16 @@ and aexp env exp = match exp with
     let (ty_list, env') =
       aexp_list env elts
     in
-    (TySet (Type.normalize ty_list), env')
+    (TySet (Type.join ty_list), env')
   (* List Comprehensions: PEP 202 http://www.python.org/dev/peps/pep-0202/ *)
   | ListComp (exp, comprehensions, loc) ->
     let env' = List.fold_left acomp env comprehensions in
     let (ty, env'') = aexp env' exp in
-    (TyAList [ty], env'')
+    (TyAList ty, env'')
   | SetComp (exp, comprehensions, loc) ->
     let env' = List.fold_left acomp env comprehensions in
     let (ty, env'') = aexp env' exp in
-    (TySet [ty], env'')
+    (TySet ty, env'')
   (* Dictionary Comprehensions: PEP 274 http://www.python.org/dev/peps/pep-0274/ *)
   | DictComp (exp1, exp2, comprehensions, loc) ->
     let env' = List.fold_left acomp env comprehensions in
@@ -221,8 +221,7 @@ and atarget env target ty =
     | Attribute (exp, id, exp_ctx, loc) -> raise (NotImplemented "atarget/Attribute")
     | Subscript (exp, slice, exp_ctx, loc) -> raise (NotImplemented "atarget/Subscript")
     | _ -> raise (ShouldNotHappen "Target of assignment should be one of (name, list, tuple, attribute, and subscript).")
-
-let rec astat_list env envlist stat_list =
+and astat_list env envlist stat_list =
   match stat_list with
       [] -> (Some env, envlist)
     | stat::stat_list ->
@@ -291,8 +290,7 @@ and astat env envlist stat =
     | Pass loc -> (Some env, [])
     | Break loc -> (None, [(env, CtlBreak)])
     | Continue loc -> (None, [(env, CtlContinue)])
-      
-let amodule env modu = match modu with
+and amodule env modu = match modu with
     Module stmts ->
       fst (astat_list env [] stmts)
   | Interactive stmts ->

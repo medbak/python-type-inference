@@ -21,12 +21,12 @@ type ty =
   | TyUnicode of int
   | TyAUnicode
   | TyTuple of ty list
-  | TyATuple of ty list
+  | TyATuple of ty
   | TyList of ty list
-  | TyAList of ty list
+  | TyAList of ty
   | TyByteArray
-  | TySet of ty list
-  | TyFrozenSet of ty list
+  | TySet of ty
+  | TyFrozenSet of ty
   | TyDict of (ty * ty) list
   | TyFunction of (ty list * ty)
   | TyGenerator of ty
