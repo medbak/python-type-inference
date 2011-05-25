@@ -27,13 +27,13 @@ type ty =
   | TyUnicode of int         (* unicode type *)
   | TyAUnicode               (* abstract unicode type *)
   | TyTuple of ty list       (* tuple *)
-  | TyATuple of ty list      (* abstract tuple *)
+  | TyATuple of ty           (* abstract tuple *)
   | TyList of ty list        (* list type *)
-  | TyAList of ty list       (* abstract list type *)
+  | TyAList of ty            (* abstract list type *)
   | TyByteArray              (* byte array *)
   (* sets *)              
-  | TySet of ty list         (* set *)
-  | TyFrozenSet of ty list   (* frozen set *)
+  | TySet of ty              (* set *)
+  | TyFrozenSet of ty        (* frozen set *)
   (* mapping *)
   | TyDict of (ty * ty) list       (* dictionary type *)
   (* callable *)
@@ -71,8 +71,8 @@ and order ty1 ty2 =
       (TyBot, _) -> true
     | (TyTuple tylist1, TyTuple tylist2) -> order_list tylist1 tylist2
     | (TyList tylist1, TyList tylist2) -> order_list tylist1 tylist2
-    | (TySet tylist1, TySet tylist2) -> order_set tylist1 tylist2
-    | (TyFrozenSet tylist1, TyFrozenSet tylist2) -> order_set tylist1 tylist2
+    | (TySet ty1, TySet ty2) -> order ty1 ty2
+    | (TyFrozenSet ty1, TyFrozenSet ty2) -> order ty1 ty2
     | (TyGenerator ty1, TyGenerator ty2) -> order ty1 ty2
     | (TyType ty1, TyType ty2) -> order ty1 ty2
     | (TyUnion tylist1, TyUnion tylist2) -> order_set tylist1 tylist2
@@ -107,12 +107,12 @@ let rec to_string ty = match ty with
   | TyUnicode i -> "TyUnicode(" ^ (string_of_int i) ^")"
   | TyAUnicode -> "TyAUnicode"
   | TyTuple tylist -> "TyTuple(" ^ (to_strings tylist to_string) ^ ")"
-  | TyATuple tylist -> "TyATuple(" ^ (to_strings tylist to_string) ^ ")"
+  | TyATuple ty -> "TyATuple(" ^ (to_string ty) ^ ")"
   | TyList tylist -> "TyList(" ^ (to_strings tylist to_string) ^ ")"
-  | TyAList tylist -> "TyAList(" ^ (to_strings tylist to_string) ^ ")"
+  | TyAList ty -> "TyAList(" ^ (to_string ty) ^ ")"
   | TyByteArray -> "TyByteArray"
-  | TySet tylist -> "TySet(" ^ (to_strings tylist to_string) ^ ")"
-  | TyFrozenSet tylist -> "TyFrozenSet(" ^ (to_strings tylist to_string) ^ ")"
+  | TySet ty -> "TySet(" ^ (to_string ty) ^ ")"
+  | TyFrozenSet ty -> "TyFrozenSet(" ^ (to_string ty) ^ ")"
   | TyDict tyty_list ->
     "TyDict(" ^
       (to_strings tyty_list
