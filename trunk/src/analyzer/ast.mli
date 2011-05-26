@@ -9,14 +9,20 @@
 type loc = int * int
     
 type identifier = string
+
+(** Module Type. See also
+    {{:http://docs.python.org/reference/toplevel_components.html}Top Level
+    Components} *)
 type modu =
     Module of stmt list
   | Interactive of stmt list
   | Expression of expr
 
-(**  Statement Type. See also {{:http://docs.python.org/reference/simple_stmts.html}Simple Statement} and 
-     {{:http://docs.python.org/reference/compound_stmts.html}Compound Statement}.
-*)      
+(** Statement Type. See also
+    {{:http://docs.python.org/reference/simple_stmts.html}Simple
+    Statement} and
+    {{:http://docs.python.org/reference/compound_stmts.html}Compound
+    Statement}. *)
 and stmt =
     FunctionDef of string * arguments * stmt list * expr list * loc (** (function name, arguments list, body, decorator list) *)
   | ClassDef of string * expr list * stmt list * expr list * loc (** (class name, base classes, body, docorator list) *)
@@ -42,8 +48,8 @@ and stmt =
   | Break of loc 
   | Continue of loc
 
-(**  Expression Type. See also {{:http://docs.python.org/reference/expressions.html}Expressions}.
-*)      
+(** Expression Type. See also
+    {{:http://docs.python.org/reference/expressions.html}Expressions}.*)
 and expr =
     BoolOp of boolop * expr list * loc 
   | BinOp of expr * operator * expr * loc 
@@ -102,12 +108,13 @@ and comprehension = expr * expr * expr list
 and excepthandler =
     ExceptHandler of expr option * expr option * stmt list * loc  
         
-(** (expr* args, identifier? vararg, identifier? kwarg, expr* defaults) *)
+(** (expr* args, identifier? vararg, identifier? kwarg, expr*
+    defaults) *)
 and arguments = expr list * identifier option * identifier option * expr list  
 
 and keyword = identifier * expr
     
-(** import name with optional 'as' alias *)    
+(** import name with optional 'as' alias *)
 and alias = identifier * identifier option 
 
 (** {6 Values} *)
@@ -115,9 +122,11 @@ and alias = identifier * identifier option
 (** [string_of_loc (l, c)] returns "(l, c)" *)
 val string_of_loc : loc -> string
 
-(** [stmt2loc stmt] returns the associated location information from the statement [stmt]. *)  
+(** [stmt2loc stmt] returns the associated location information from
+    the statement [stmt]. *)
 val stmt2loc : stmt -> loc
 
-(** [exp2loc stmt] returns the associated location information from the expression [exp]. *)
+(** [exp2loc stmt] returns the associated location information from
+    the expression [exp]. *)
 val exp2loc : expr -> loc
 

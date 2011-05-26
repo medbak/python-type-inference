@@ -61,8 +61,9 @@ val order : ty -> ty -> bool
     ∀ ty1 ∈ tylist1. ∃ ty2 ∈ tylist2. [order ty1 ty2] *)
 val order_set : ty list -> ty list -> bool
 
-(** [order_list \[ty_11, ty_12, ..., ty_1n\] \[ty_21, ty_22, ..., ty_2n\]
-    ] is true iff [order ty_11 ty_21] & [order ty_12 ty_22] & ... & [order ty_1n ty_2n] *)
+(** [order_list \[ty_11, ty_12, ..., ty_1n\] \[ty_21, ty_22, ...,
+    ty_2n\] ] is true iff ([order ty_11 ty_21]) & ([order ty_12
+    ty_22]) & ... & ([order ty_1n ty_2n]) *)
 val order_list : ty list -> ty list -> bool
 
 (** Join operation. *)

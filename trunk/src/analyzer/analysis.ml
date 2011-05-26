@@ -309,14 +309,6 @@ and aarguments env (args, vararg_op, kwarg_op, defaults) func_name loc =
     (env, 1, [])
     args
   in (env', List.rev arg_ty_list)
-and astat_list env envlist stat_list =
-  match stat_list with
-      [] -> (Some env, envlist)
-    | stat::stat_list ->
-      let (envop', envlist') = astat env envlist stat in
-      match envop' with
-          None -> (None, envlist')
-        | Some env' ->  astat_list env' envlist' stat_list
 and astat env envlist stat =
   match stat with 
     (* TODO *)    
@@ -391,6 +383,14 @@ and astat env envlist stat =
     | Pass loc -> (Some env, [])
     | Break loc -> (None, [(env, CtlBreak)])
     | Continue loc -> (None, [(env, CtlContinue)])
+and astat_list env envlist stat_list =
+  match stat_list with
+      [] -> (Some env, envlist)
+    | stat::stat_list ->
+      let (envop', envlist') = astat env envlist stat in
+      match envop' with
+          None -> (None, envlist')
+        | Some env' ->  astat_list env' envlist' stat_list
 and amodule env modu = match modu with
     Module stmts ->
       fst (astat_list env [] stmts)
