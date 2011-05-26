@@ -76,6 +76,10 @@ and arguments = expr list * identifier option * identifier option * expr list
 and keyword = identifier * expr
 and alias = identifier * identifier option
 
+let string_of_loc (line, col) =
+  "(" ^ (string_of_int line) ^ ", "
+      ^ (string_of_int col) ^ ")"
+    
 let stmt2loc stmt = match stmt with
     FunctionDef (_, _, _, _, loc) -> loc
   | ClassDef (_, _, _, _, loc) -> loc

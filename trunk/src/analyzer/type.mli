@@ -7,8 +7,9 @@
 exception NotImplemented
 type ty =
     TyBot
+  | TyTop
   | TyNone
-  | TyVar of int
+  | TyVar of string * Ast.loc * int * ty
   | TyNotImplemented
   | TyEllipsis
   | TyInt
@@ -24,12 +25,16 @@ type ty =
   | TyATuple of ty
   | TyList of ty list
   | TyAList of ty
-  | TyByteArray
-  | TySet of ty
-  | TyFrozenSet of ty
+  | TyByteArray of int
+  | TyAByteArray
+  | TySet of ty * int         
+  | TyFrozenSet of ty * int   
+  | TyASet of ty              
+  | TyAFrozenSet of ty        
   | TyDict of (ty * ty) list
   | TyFunction of (ty list * ty)
-  | TyGenerator of ty
+  | TyGenerator of ty * int
+  | TyAGenerator of ty
   | TyObject
   | TyType of ty
   | TyUnion of ty list
@@ -42,3 +47,4 @@ val order : ty -> ty -> bool
 val to_string : ty -> string
 exception RuntimeError of string
 exception TypeError of string * Ast.loc
+exception TypeWarning of string * Ast.loc

@@ -89,5 +89,6 @@ and excepthandler =
 and arguments = expr list * identifier option * identifier option * expr list
 and keyword = identifier * expr
 and alias = identifier * identifier option
+val string_of_loc : loc -> string
 val stmt2loc : stmt -> loc
 val exp2loc : expr -> loc
