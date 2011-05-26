@@ -8,32 +8,36 @@ open Batteries
 exception NotImplemented
 
 type ty =
-  (* Bot is not a type in python, but we need it for analysis *)
-  | TyBot                    (* bottom type *)
-  | TyNone                   (* none type *)
+  (* Bot/Top are not types in python, but we need them for analysis *)
+  | TyBot                     (* bottom type *)
+  | TyTop                     (* top type *)
+  | TyNone                    (* none type *)
   (* type variable is not a type in python, but we need it for analysis *)
-  | TyVar of int             (* type variable *)
-  | TyNotImplemented         (* not implemented *)
-  | TyEllipsis               (* ellipsis *)
-  | TyInt                    (* integer type *)
+  | TyVar of string * Ast.loc * int * ty (* type variable *)
+  | TyNotImplemented          (* not implemented *)
+  | TyEllipsis                (* ellipsis *)
+  | TyInt                     (* integer type *)
   (* numerals *)
-  | TyLong                   (* long type *)
-  | TyBool                   (* boolean type *)
-  | TyFloat                  (* float type *)
-  | TyComplex                (* complex type *)
+  | TyLong                    (* long type *)
+  | TyBool                    (* boolean type *)
+  | TyFloat                   (* float type *)
+  | TyComplex                 (* complex type *)
   (* sequences *)
-  | TyString of int          (* string type *)
-  | TyAString                (* abstract string type *)
-  | TyUnicode of int         (* unicode type *)
-  | TyAUnicode               (* abstract unicode type *)
-  | TyTuple of ty list       (* tuple *)
-  | TyATuple of ty           (* abstract tuple *)
-  | TyList of ty list        (* list type *)
-  | TyAList of ty            (* abstract list type *)
-  | TyByteArray              (* byte array *)
+  | TyString of int           (* string type *)
+  | TyAString                 (* abstract string type *)
+  | TyUnicode of int          (* unicode type *)
+  | TyAUnicode                (* abstract unicode type *)
+  | TyTuple of ty list        (* tuple *)
+  | TyATuple of ty            (* abstract tuple *)
+  | TyList of ty list         (* list type *)
+  | TyAList of ty             (* abstract list type *)
+  | TyByteArray of int        (* byte array *)
+  | TyAByteArray              (* byte array *)
   (* sets *)              
-  | TySet of ty              (* set *)
-  | TyFrozenSet of ty        (* frozen set *)
+  | TySet of ty * int         (* set *)
+  | TyFrozenSet of ty * int   (* frozen set *)
+  | TyASet of ty              (* set *)
+  | TyAFrozenSet of ty        (* frozen set *)
   (* mapping *)
   | TyDict of (ty * ty) list       (* dictionary type *)
   (* callable *)
@@ -41,12 +45,12 @@ type ty =
   (* Built-in/User-defined methods *)
   | TyFunction of (ty list * ty)
   (* Generator functions *)
-  | TyGenerator of ty
+  | TyGenerator of ty * int
+  | TyAGenerator of ty
   | TyObject                       (* object type *)
   | TyType of ty                   (* type type *)
   | TyUnion of ty list             (* union type *)
   | TyClass of (string * ty) list  (* class type *)
-
 
 let normalize tylist = BatList.sort_unique compare tylist              
   
@@ -69,17 +73,21 @@ and order ty1 ty2 =
   if ty1 = ty2 then true
   else match (ty1, ty2) with
       (TyBot, _) -> true
+    | (_, TyTop) -> true
     | (TyTuple tylist1, TyTuple tylist2) -> order_list tylist1 tylist2
     | (TyList tylist1, TyList tylist2) -> order_list tylist1 tylist2
-    | (TySet ty1, TySet ty2) -> order ty1 ty2
-    | (TyFrozenSet ty1, TyFrozenSet ty2) -> order ty1 ty2
-    | (TyGenerator ty1, TyGenerator ty2) -> order ty1 ty2
+    | (TySet (ty1, l1), TySet (ty2, l2)) -> l1 = l2 && order ty1 ty2
+    | (TyASet ty1, TyASet ty2) -> order ty1 ty2
+    | (TyFrozenSet (ty1, l1), TyFrozenSet (ty2, l2)) -> l1 = l2 && order ty1 ty2
+    | (TyAFrozenSet ty1, TyAFrozenSet ty2) -> order ty1 ty2
+    | (TyGenerator (ty1, l1), TyGenerator (ty2, l2)) -> l1 = l2 && order ty1 ty2
+    | (TyAGenerator ty1, TyAGenerator ty2) -> order ty1 ty2
     | (TyType ty1, TyType ty2) -> order ty1 ty2
     | (TyUnion tylist1, TyUnion tylist2) -> order_set tylist1 tylist2
     | (TyDict tytylist1, TyDict tytylist2) -> raise NotImplemented                   (* TODO *)
     | (TyClass idtylist1, TyClass idtylist2) -> raise NotImplemented                 (* TODO *)
     | (TyFunction (tylist1, ty1), TyFunction (tylist2, ty2)) -> raise NotImplemented (* TODO *)
-    | (TyVar x, TyVar y) -> x = y                                                    (* TODO *)
+    | (TyVar (name1, loc1, n1, ty1), TyVar (name2, loc2, n2, ty2)) -> name1 = name2 && loc1 = loc2 && n1 == n2 && (order ty1 ty2)
     | _ -> false
       
 let to_strings ty_list to_string = match ty_list with
@@ -93,8 +101,9 @@ let to_strings ty_list to_string = match ty_list with
     
 let rec to_string ty = match ty with
   | TyBot -> "TyBot"
+  | TyTop -> "TyTop"
   | TyNone -> "TyNone"
-  | TyVar x -> "TyVar(" ^ (string_of_int x) ^ ")"
+  | TyVar (name, loc, n, ty) -> "TyVar(" ^ name ^ ", " ^ (Ast.string_of_loc loc) ^ ", " ^ (string_of_int n) ^ "," ^ (to_string ty)  ^ ")"
   | TyNotImplemented -> "TyNotImplemented"
   | TyEllipsis -> "TyEllipsis"
   | TyInt -> "TyInt"
@@ -110,9 +119,12 @@ let rec to_string ty = match ty with
   | TyATuple ty -> "TyATuple(" ^ (to_string ty) ^ ")"
   | TyList tylist -> "TyList(" ^ (to_strings tylist to_string) ^ ")"
   | TyAList ty -> "TyAList(" ^ (to_string ty) ^ ")"
-  | TyByteArray -> "TyByteArray"
-  | TySet ty -> "TySet(" ^ (to_string ty) ^ ")"
-  | TyFrozenSet ty -> "TyFrozenSet(" ^ (to_string ty) ^ ")"
+  | TyByteArray l -> "TyByteArray(" ^ (string_of_int l) ^ ")"
+  | TyAByteArray -> "TyAByteArray"
+  | TySet (ty,l) -> "TySet(" ^ (to_string ty) ^ ", "^ (string_of_int l) ^")"
+  | TyFrozenSet (ty,l) -> "TyFrozenSet(" ^ (to_string ty) ^ ", "^ (string_of_int l) ^")"
+  | TyASet ty -> "TyASet(" ^ (to_string ty) ^")"
+  | TyAFrozenSet ty -> "TyAFrozenSet(" ^ (to_string ty) ^")"
   | TyDict tyty_list ->
     "TyDict(" ^
       (to_strings tyty_list
@@ -122,7 +134,8 @@ let rec to_string ty = match ty with
       )
     ^ ")"
   | TyFunction (tylist, ty) -> "TyFunction{(" ^ (to_strings tylist to_string)  ^") -> " ^ (to_string ty) ^ "}"
-  | TyGenerator ty -> "TyGenerator(" ^ (to_string ty) ^ ")"
+  | TyGenerator (ty, l) -> "TyGenerator(" ^ (to_string ty) ^ ", "^ (string_of_int l) ^")"
+  | TyAGenerator ty -> "TyAGenerator(" ^ (to_string ty) ^ ")"
   | TyObject -> "TyObject"  
   | TyType ty -> "TyType(" ^ to_string ty ^ ")"            
   | TyUnion tylist -> "TyUnion(" ^ (to_strings tylist to_string) ^ ")"
@@ -138,3 +151,4 @@ let rec to_string ty = match ty with
 (* errors *)
 exception RuntimeError of string
 exception TypeError of string * Ast.loc
+exception TypeWarning of string * Ast.loc

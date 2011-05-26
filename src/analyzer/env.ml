@@ -7,6 +7,9 @@ type t = (string, Type.ty) Batteries.PMap.t
 
 let empty_env = PMap.empty
 
+let bind var ty env = PMap.add var ty env    
+let find var env = PMap.find var env
+  
 let join env1 env2 =
   PMap.foldi
     (fun key value1 env ->
@@ -21,6 +24,7 @@ let join env1 env2 =
     env1
     env2
 
+  
 let joinop envop1 envop2 = match (envop1, envop2) with
     (None, None) -> None
   | (Some env, None) -> Some env
@@ -43,3 +47,5 @@ let to_string env =
       str ^ key ^ " ==> " ^ (Type.to_string value) ^ "\n")
     env
     ""
+
+    
