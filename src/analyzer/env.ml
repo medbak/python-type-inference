@@ -5,7 +5,7 @@ open Type
 
 type t = (string, Type.ty) Batteries.PMap.t
 
-let empty_env = PMap.empty
+let empty = PMap.empty
 
 let bind var ty env = PMap.add var ty env    
 let find var env = PMap.find var env

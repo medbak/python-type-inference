@@ -35,9 +35,9 @@ type ty =
   | TyAByteArray              (* byte array *)
   (* sets *)              
   | TySet of ty * int         (* set *)
+  | TyASet of ty              (* abstract set *)
   | TyFrozenSet of ty * int   (* frozen set *)
-  | TyASet of ty              (* set *)
-  | TyAFrozenSet of ty        (* frozen set *)
+  | TyAFrozenSet of ty        (* abstract frozen set *)
   (* mapping *)
   | TyDict of (ty * ty) list       (* dictionary type *)
   (* callable *)
@@ -54,7 +54,7 @@ type ty =
 
 let normalize tylist = BatList.sort_unique compare tylist              
   
-      let rec order_set tylist1 tylist2 =
+let rec order_set tylist1 tylist2 =
   List.for_all
     (fun ty1 ->
       List.exists

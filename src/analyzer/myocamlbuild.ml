@@ -170,12 +170,10 @@ let _ = dispatch begin function
        Batteries.before_options ()
    | After_rules ->
        OCamlFind.after_rules ();
-       Batteries.after_rules ()
-
-
+       Batteries.after_rules ();
+       flag ["ocaml"; "doc"] (A"-keep-code")
    | _ -> ()
 end
-
 
 
 (**

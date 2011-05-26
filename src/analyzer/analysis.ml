@@ -10,6 +10,7 @@ type ctl =
   | CtlBreak
   | CtlContinue
   | CtlReturn
+  | CtlYield
 type size = INT of int | UNKNOWN
 let mul_size s1 s2 = match (s1, s2) with
     (INT x, INT y) -> INT (x * y)
@@ -300,7 +301,6 @@ and atarget env target ty =
     | Subscript (exp, slice, exp_ctx, loc) -> raise (NotImplemented "atarget/Subscript")
     | _ -> raise (ShouldNotHappen "Target of assignment should be one of (name, list, tuple, attribute, and subscript).")
 (* TODO: Currently, it only support positional arguments (no vararg, keyword, and default) *)
-and get_prefix name (line, col) = name ^ "_" ^ (string_of_int line) ^ "_" ^ (string_of_int col)
 and aarguments env (args, vararg_op, kwarg_op, defaults) func_name loc = 
   let (env', _, arg_ty_list) = List.fold_left
     (fun (env, i, arg_ty_list) arg ->
