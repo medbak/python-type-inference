@@ -54,11 +54,7 @@ type ty =
 
 let normalize tylist = BatList.sort_unique compare tylist              
   
-let join tylist = match normalize tylist with
-    ty::[] -> ty
-  | tylist' -> TyUnion tylist'
-
-let rec order_set tylist1 tylist2 =
+      let rec order_set tylist1 tylist2 =
   List.for_all
     (fun ty1 ->
       List.exists
@@ -89,6 +85,21 @@ and order ty1 ty2 =
     | (TyFunction (tylist1, ty1), TyFunction (tylist2, ty2)) -> raise NotImplemented (* TODO *)
     | (TyVar (name1, loc1, n1, ty1), TyVar (name2, loc2, n2, ty2)) -> name1 = name2 && loc1 = loc2 && n1 == n2 && (order ty1 ty2)
     | _ -> false
+
+let rec join tylist =
+  let rec join_typair ty1 ty2 =
+    if order ty1 ty2 then ty2
+    else if order ty2 ty1 then ty1
+    else match (ty1, ty2) with
+        (TyUnion tylist1, TyUnion tylist2) -> TyUnion (normalize tylist1@tylist2)
+      | (TyUnion tylist1, ty) -> TyUnion (normalize (ty::tylist1))
+      | (ty, TyUnion tylist2) -> TyUnion (normalize (ty::tylist2))
+      | (ty1, ty2) -> TyUnion [ty1; ty2]
+  in
+  match normalize tylist with
+    | [] -> TyBot
+    | ty::[] -> ty
+    | ty1::ty2::tylist' -> join (tylist'@[join_typair ty1 ty2])
       
 let to_strings ty_list to_string = match ty_list with
     [] -> ""
