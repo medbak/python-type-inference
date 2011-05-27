@@ -8,13 +8,14 @@
     
 type ty =
     TyBot                                    (** Bottom *)
-  | TyTop                                    (** Top *)
   | TyNone
   | TyVar of string * Ast.loc * int * ty
   (** Type variable is introduce at the function definition. TyVar
       (function name, location, position, constraint) *)
   | TyNotImplemented
   | TyEllipsis
+  | TyNumber        (** Number *)
+  | TyIntegral      (** Integral *)
   | TyInt           (** Int *)
   | TyLong          (** Long *)
   | TyBool          (** Bool *)
@@ -38,9 +39,14 @@ type ty =
   | TyFunction of (ty list * ty) (** Function type, (argument_type list, return_type) *)
   | TyGenerator of ty * int  (** Concrete generator type which maintains a length of its contents *)
   | TyAGenerator of ty       (** Abstract generator type *)
-  | TyObject                 (** Object type *)
+  | TyObject                 (** Object type, represents top *)
   | TyType of ty             (** Type type *)
   | TyUnion of ty list       (** Union type *)
+  | TySeq                    (** Sequence type *)
+  | TyImmSeq                 (** Immutable Sequence type *)
+  | TyMuSeq                  (** Mutable Sequence type *)
+  | TyFile                   (** File type *)
+  | TyCallable               (** Callable type *)
   | TyClass of (string * ty) list (** Class type. Map from attribute/method names -> their types *)
 
 (** {6 Exceptions} *)
