@@ -190,8 +190,33 @@ and aexp env exp = match exp with
     (TyAGenerator ty, env')
   (* TODO : Not implemented *)
   | Compare (exp, cmpops, exps, loc) -> raise (NotImplemented "Compare")
-  (* TODO : Not implemented *)
-  | Call (exp, exps, keywords, exp1_option, exp2_option, loc) -> raise (NotImplemented "Call")
+  (* TODO: Current limitations
+     1. We do not support keywords, starargs, and kwargs.
+     2. We do not consider the side effect of function call
+        - change of passed arguments
+        - change of global variables
+     3. The only callable type is TyFunction. We do not support
+        - class method, class initialization, etc.
+  *)
+  | Call (func, args, keywords, starargs, kwargs, loc) ->
+    begin
+      let (func_ty, env') = aexp env func in
+      let (arg_ty_list, env'') = aexp_list env args in
+      match func_ty with
+          TyFunction (param_ty_list, ret_ty) ->
+            let ret_ty' =
+              try
+                List.fold_left2
+                  (fun ret_ty ty1 ty2 -> subst ty1 ty2 ret_ty)
+                  ret_ty
+                  param_ty_list
+                  arg_ty_list
+              with
+                  Invalid_argument _ -> raise (TypeError ("# of formal parameters and # of actual arguments do not match.", loc))
+            in
+            (ret_ty', env'')
+        | _ -> raise (TypeError ("Function call", loc))
+    end
   (* "repr" expression `x` is not equivalent to the function call repr(x)
    * function call repr(x) is overriden by the function definition of repr,
    * but repr expression is not overriden by that.

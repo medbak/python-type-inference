@@ -100,6 +100,32 @@ let rec join tylist =
     | [] -> TyBot
     | ty::[] -> ty
     | ty1::ty2::tylist' -> join (tylist'@[join_typair ty1 ty2])
+
+(** substitue ty1 with ty2 in ty *)      
+let rec subst ty1 ty2 ty = match ty with
+    (* No Change *)
+    TyBot   | TyTop   | TyNone  | TyNotImplemented  | TyEllipsis
+  | TyInt  | TyLong  | TyBool  | TyFloat  | TyComplex
+  | TyString _   | TyAString   | TyUnicode _ 
+  | TyAUnicode  | TyByteArray _  | TyAByteArray
+  | TyObject -> ty
+  (* map inside *)
+  | TyTuple ty_list -> TyTuple (List.map (fun ty -> subst ty1 ty2 ty) ty_list)
+  | TyATuple ty -> TyATuple (subst ty1 ty2 ty)
+  | TyList ty_list -> TyList (List.map (fun ty -> subst ty1 ty2 ty) ty_list)
+  | TyAList ty -> TyAList (subst ty1 ty2 ty)
+  | TySet (ty, n) -> TySet ((subst ty1 ty2 ty), n)
+  | TyASet ty -> TyASet (subst ty1 ty2 ty)
+  | TyFrozenSet (ty, n) -> TyFrozenSet ((subst ty1 ty2 ty), n)
+  | TyAFrozenSet ty -> TyAFrozenSet (subst ty1 ty2 ty)
+  | TyDict ty_ty_list -> TyDict (List.map (fun (ty_k, ty_v) -> (subst ty1 ty2 ty_k, subst ty1 ty2 ty_v)) ty_ty_list)
+  | TyFunction (ty_list, ty) -> TyFunction (List.map (fun ty -> subst ty1 ty2 ty) ty_list, subst ty1 ty2 ty)
+  | TyGenerator (ty, n) -> TyGenerator (subst ty1 ty2 ty, n)
+  | TyAGenerator ty -> TyAGenerator (subst ty1 ty2 ty)
+  | TyType ty -> TyType (subst ty1 ty2 ty)
+  | TyUnion ty_list -> TyUnion (List.map (fun ty -> subst ty1 ty2 ty) ty_list)
+  | TyClass key_ty_list -> TyClass (List.map (fun (key, ty) -> (key, subst ty1 ty2 ty)) key_ty_list)
+  | TyVar _ -> if ty = ty1 then ty2 else ty
       
 let to_strings ty_list to_string = match ty_list with
     [] -> ""
