@@ -47,7 +47,7 @@ let rec acomp env (target, iter, ifs) =
       -> raise (ShouldNotHappen "acomp: Not iterable")
     (* ---------------------------------------------------.-----------------*)
     | TyComplex|TyFloat|TyBool|TyLong|TyInt|TyEllipsis|TyNotImplemented|TyNone
-    | TyTop|TyBot -> raise (ShouldNotHappen "acomp: Not iterable")
+    | TyBot -> raise (ShouldNotHappen "acomp: Not iterable")
   in
   match ifs with
       [] -> (atarget env' target target_ty, size)
@@ -247,7 +247,7 @@ and aexp env exp = match exp with
         | TyUnion _|TyType _|TyGenerator _|TyFunction _|TyDict _|TyFrozenSet _
         | TySet _|TyAList _|TyList _|TyATuple _|TyTuple _|TyUnicode _|TyString _
         | TyVar _|TyObject|TyByteArray _|TyAByteArray _|TyAUnicode|TyAString|TyComplex|TyFloat|TyBool
-        | TyLong|TyInt|TyEllipsis|TyNotImplemented|TyNone|TyBot|TyTop
+        | TyLong|TyInt|TyEllipsis|TyNotImplemented|TyNone|TyBot
         | TyAGenerator _|TyAFrozenSet _|TyASet _
           -> raise (TypeError ("Right hand side of attribute access should be object type.", loc))
     end
@@ -319,7 +319,7 @@ and atarget env target ty =
           | TyAGenerator _ -> raise (TypeError ("Invalid numbers", loc))
           |TyClass _|TyUnion _|TyType _|TyFunction _
           |TyVar _|TyObject|TyComplex|TyFloat|TyBool|TyLong|TyInt|TyEllipsis|TyNotImplemented
-          |TyNone|TyBot|TyTop
+          |TyNone|TyBot
             -> raise (TypeError ("Should be an iterable type but " ^ (Type.to_string ty), loc))
       end      
     | Attribute (exp, id, exp_ctx, loc) -> raise (NotImplemented "atarget/Attribute")
@@ -329,7 +329,7 @@ and atarget env target ty =
 and aarguments env (args, vararg_op, kwarg_op, defaults) func_name loc = 
   let (env', _, arg_ty_list) = List.fold_left
     (fun (env, i, arg_ty_list) arg ->
-      let arg_ty = TyVar (func_name, loc, i, TyTop) in
+      let arg_ty = TyVar (func_name, loc, i, TyObject) in
       (atarget env arg arg_ty , i+1, arg_ty::arg_ty_list))
     (env, 1, [])
     args
