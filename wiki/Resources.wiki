@@ -28,6 +28,7 @@ Existing Python tools (limited to mostly syntactic checks):
  *  PyFlakes : http://pypi.python.org/pypi/pyflakes
  *  PyLint: http://www.logilab.org/project/pylint
  *  PySonar : http://yinwang0.wordpress.com/2010/09/12/pysonar/
+ * Pyntch : http://www.unixuser.org/~euske/python/pyntch/index.html
 
 = Language References =
 Python Language:
