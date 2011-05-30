@@ -2,6 +2,7 @@
 open Batteries
 open Ast
 open Type
+open Lib
 
 exception NotImplemented of string
 exception ShouldNotHappen of string
@@ -10,15 +11,10 @@ type ctl =
   | CtlBreak
   | CtlContinue
   | CtlReturn
-  | CtlYield
 type size = INT of int | UNKNOWN
 let mul_size s1 s2 = match (s1, s2) with
     (INT x, INT y) -> INT (x * y)
   | _ -> UNKNOWN
-
-let rec repeat elt n = match n with
-  | 0 -> []
-  | n -> elt::(repeat elt (n-1))
 
 (* TODO *)
 let rec acomp env (target, iter, ifs) =
@@ -42,11 +38,16 @@ let rec acomp env (target, iter, ifs) =
     | TyAFrozenSet ty -> (ty, UNKNOWN)
     | TyGenerator (ty, l) -> (ty, INT l)
     | TyAGenerator ty -> (ty, UNKNOWN)
+    | TyFile -> (TyString 1, UNKNOWN)
+    | TyMuSeq ty -> (ty, UNKNOWN)
+    | TySeq ty -> (ty, UNKNOWN)
+    | TyImmSeq ty -> (ty, UNKNOWN)
     (* ---- TODO: Currently, the following types are not iterable.-----------------*)
     | TyClass _|TyUnion _|TyType _|TyFunction _|TyVar _|TyObject
       -> raise (ShouldNotHappen "acomp: Not iterable")
     (* ---------------------------------------------------.-----------------*)
     | TyComplex|TyFloat|TyBool|TyLong|TyInt|TyEllipsis|TyNotImplemented|TyNone
+    | TyCallable|TyIntegral|TyNumber
     | TyBot -> raise (ShouldNotHappen "acomp: Not iterable")
   in
   match ifs with
@@ -106,7 +107,29 @@ and aexp env exp = match exp with
       | Add
       | Sub
       | Mult
-      | Div
+      | Div ->
+        let (ty_left, env') = aexp env left in
+        let (ty_right, env'') = aexp env right in
+        begin
+          match (ty_left, ty_right) with
+              (TyInt, TyInt) -> (TyInt, env'')
+            | (TyInt, TyLong) -> (TyLong, env'')
+            | (TyInt, TyFloat) -> (TyFloat, env'')
+            | (TyInt, TyComplex) -> (TyComplex, env'')
+            | (TyLong, TyInt) -> (TyLong, env'')
+            | (TyLong, TyLong) -> (TyLong, env'')
+            | (TyLong, TyFloat) -> (TyFloat, env'')
+            | (TyLong, TyComplex) -> (TyComplex, env'')
+            | (TyFloat, TyInt) -> (TyFloat, env'')
+            | (TyFloat, TyLong) -> (TyFloat, env'')
+            | (TyFloat, TyFloat) -> (TyFloat, env'')
+            | (TyFloat, TyComplex) -> (TyComplex, env'')
+            | (TyComplex, TyInt) -> (TyComplex, env'')
+            | (TyComplex, TyLong) -> (TyComplex, env'')
+            | (TyComplex, TyFloat) -> (TyComplex, env'')
+            | (TyComplex, TyComplex) -> (TyComplex, env'')
+            | _ -> raise (NotImplemented ("BinOP: left_exp = " ^ (to_string ty_left) ^ " , right_exp = " ^ (to_string ty_right)))
+        end
       | Mod
       | Pow
       | LShift
@@ -207,7 +230,15 @@ and aexp env exp = match exp with
             let ret_ty' =
               try
                 List.fold_left2
-                  (fun ret_ty ty1 ty2 -> subst ty1 ty2 ret_ty)
+                  (fun ret_ty ty1 ty2 ->
+                    match ty1 with
+                        TyVar(_, _, _, ty_con) ->
+                          if order ty2 ty_con then 
+                            subst ty1 ty2 ret_ty
+                          else
+                            raise (TypeError ((to_string ty_con) ^ " argument expected, got " ^ (to_string ty2), loc))
+                      | _ -> raise (TypeError ("Should be TyVar" ^ (to_string ty1), loc)) 
+                  )
                   ret_ty
                   param_ty_list
                   arg_ty_list
@@ -244,11 +275,43 @@ and aexp env exp = match exp with
                 (attr_ty, env')
               with Not_found -> raise (TypeError ("The object has no " ^ id ^" field.", loc))
             end
+        | TyString l ->
+          begin
+            match id with
+                (* Ref: http://docs.python.org/library/string.html#string-functions *)
+                (* TODO: Change TyInt -> TyVar(..., TyInt) *)
+                "capitalize" -> (Type.make_prefn([], TyString l), env')
+              | "expandtabs" -> (Type.make_prefn([TyInt], TyAString), env')
+              | "find" -> (Type.make_prefn([TyAString; TyInt; TyInt], TyInt), env')
+              | "rfind" -> (Type.make_prefn([TyAString; TyInt; TyInt], TyInt), env')
+              | "index" -> (Type.make_prefn([TyAString; TyInt; TyInt], TyInt), env')
+              | "rindex" -> (Type.make_prefn([TyAString; TyInt; TyInt], TyInt), env')
+              | "count" -> (Type.make_prefn([TyAString; TyInt; TyInt], TyInt), env')
+              | "lower" -> (Type.make_prefn([], TyString l), env')
+              | "split" -> (Type.make_prefn([TyAString; TyInt], TyAList(TyAString)), env')
+              | "rsplit" -> (Type.make_prefn([TyAString; TyInt], TyAList(TyAString)), env')
+              | "splitfields" -> (Type.make_prefn([TyAString; TyInt], TyAList(TyAString)), env')
+              | "join" -> (Type.make_prefn([TyAList(TyAString); TyAString], TyAList(TyAString)), env')
+              | "joinfields" -> (Type.make_prefn([TyAList(TyAString); TyAString], TyAList(TyAString)), env')
+              | "lstrip" -> (Type.make_prefn([TyAString], TyAString), env')
+              | "rstrip" -> (Type.make_prefn([TyAString], TyAString), env')
+              | "strip" -> (Type.make_prefn([TyAString], TyAString), env')
+              | "swapcase" -> (Type.make_prefn([], TyString l), env')
+              | "translate" -> (Type.make_prefn([TyString 256; TyAString], TyAString), env')
+              | "upper" -> (Type.make_prefn([], TyString l), env')
+              | "ljust" -> (Type.make_prefn([TyInt; TyString 1], TyAString), env')
+              | "rjust" -> (Type.make_prefn([TyInt; TyString 1], TyAString), env')
+              | "center" -> (Type.make_prefn([TyInt; TyString 1], TyAString), env')
+              | "zfill" -> (Type.make_prefn([TyInt], TyAString), env')
+              | "replace" -> (Type.make_prefn([TyAString; TyAString; TyInt], TyAString), env')
+              | _ -> raise (TypeError ("'str' object has no attribute '" ^ id ^ "'", loc))
+          end
         | TyUnion _|TyType _|TyGenerator _|TyFunction _|TyDict _|TyFrozenSet _
-        | TySet _|TyAList _|TyList _|TyATuple _|TyTuple _|TyUnicode _|TyString _
+        | TySet _|TyAList _|TyList _|TyATuple _|TyTuple _|TyUnicode _
         | TyVar _|TyObject|TyByteArray _|TyAByteArray _|TyAUnicode|TyAString|TyComplex|TyFloat|TyBool
         | TyLong|TyInt|TyEllipsis|TyNotImplemented|TyNone|TyBot
         | TyAGenerator _|TyAFrozenSet _|TyASet _
+        | TyMuSeq _|TyImmSeq _|TySeq _|TyCallable|TyFile|TyIntegral|TyNumber
           -> raise (TypeError ("Right hand side of attribute access should be object type.", loc))
     end
   | Subscript (exp, slice, exp_context, loc) ->
@@ -259,7 +322,17 @@ and aexp env exp = match exp with
     begin
       try
         (Env.find id env, env)
-      with Not_found -> raise (TypeError ("Name " ^ id ^ " is not in the environment", loc))
+      with Not_found ->
+        begin
+          match id with
+              "abs" -> (Type.make_prefn([TyNumber], TyFloat), env)
+            | "bin" -> (Type.make_prefn([TyUnion([TyInt;TyLong])], TyAString), env)
+            | "chr" -> (Type.make_prefn([TyInt], TyString 1), env)
+            | "cmp" -> (Type.make_prefn([TyObject; TyObject], TyBool), env)
+            | "id" -> (Type.make_prefn([TyObject], TyInt), env)
+            | "ord" -> (Type.make_prefn([TyUnion([TyString 1; TyUnicode 1])], TyInt), env)
+            | _ -> raise (TypeError ("Name " ^ id ^ " is not in the environment", loc))
+        end
     end
   | List (exps, exp_context, loc) ->
     let (ty_list, env') =
@@ -317,9 +390,10 @@ and atarget env target ty =
           | TyGenerator (ty, l) -> if exp_len = l then atarget_list env exp_list ty
             else raise (TypeError ("Invalid numbers", loc))
           | TyAGenerator _ -> raise (TypeError ("Invalid numbers", loc))
-          |TyClass _|TyUnion _|TyType _|TyFunction _
-          |TyVar _|TyObject|TyComplex|TyFloat|TyBool|TyLong|TyInt|TyEllipsis|TyNotImplemented
-          |TyNone|TyBot
+          | TyMuSeq _|TyImmSeq _|TySeq _|TyFile -> raise (TypeError ("Invalid numbers", loc))
+          | TyClass _|TyUnion _|TyType _|TyFunction _
+          | TyVar _|TyObject|TyComplex|TyFloat|TyBool|TyLong|TyInt|TyEllipsis|TyNotImplemented              
+          | TyNone|TyBot|TyCallable|TyIntegral|TyNumber
             -> raise (TypeError ("Should be an iterable type but " ^ (Type.to_string ty), loc))
       end      
     | Attribute (exp, id, exp_ctx, loc) -> raise (NotImplemented "atarget/Attribute")

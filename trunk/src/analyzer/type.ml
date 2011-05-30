@@ -6,6 +6,10 @@
  *)
 open Batteries
 exception NotImplemented
+(* errors *)
+exception RuntimeError of string
+exception TypeError of string * Ast.loc
+exception TypeWarning of string * Ast.loc
 
 type ty =
     TyBot                                    (** Bottom *)
@@ -43,9 +47,9 @@ type ty =
   | TyObject                 (** Object type, represents top *)
   | TyType of ty             (** Type type *)
   | TyUnion of ty list       (** Union type *)
-  | TySeq                    (** Sequence type *)
-  | TyImmSeq                 (** Immutable Sequence type *)
-  | TyMuSeq                  (** Mutable Sequence type *)
+  | TySeq of ty              (** Sequence type *)
+  | TyImmSeq of ty           (** Immutable Sequence type *)
+  | TyMuSeq of ty            (** Mutable Sequence type *)
   | TyFile                   (** File type *)
   | TyCallable               (** Callable type *)
   | TyClass of (string * ty) list (** Class type. Map from attribute/method names -> their types *)
@@ -65,24 +69,27 @@ let rec order ty1 ty2 =
     | (TyFloat, _) -> order TyNumber ty2
     | (TyComplex, _) -> order TyNumber ty2
     (** Seq *)
-    | (TyImmSeq, _) -> order TySeq ty2
-    | (TyMuSeq, _) -> order TySeq ty2
+    | (TySeq ty1, TySeq ty2) -> order ty1 ty2
+    | (TyImmSeq ty, _) -> order (TySeq ty) ty2
+    | (TyImmSeq ty1, TyImmSeq ty2) -> order ty1 ty2      
+    | (TyMuSeq ty, _) -> order (TySeq ty) ty2
+    | (TyMuSeq ty1, TyMuSeq ty2) -> order ty1 ty2
     | (TyString _, _) -> order TyAString ty2
-    | (TyAString, _) -> order TyImmSeq ty2
+    | (TyAString, _) -> order (TyImmSeq TyAString) ty2
     | (TyUnicode _, _) -> order TyAUnicode ty2
-    | (TyAUnicode, _) -> order TyImmSeq ty2
+    | (TyAUnicode, _) -> order (TyImmSeq TyAUnicode) ty2
     | (TyTuple tylist1, TyTuple tylist2) -> order_list tylist1 tylist2
     | (TyTuple tylist1, TyATuple ty2) -> List.for_all (fun ty1 -> order ty1 ty2) tylist1
-    | (TyTuple _, _) -> order TyImmSeq ty2
+    | (TyTuple tylist1, _) -> order (TyImmSeq (join tylist1))  ty2
     | (TyATuple ty1, TyATuple ty2) -> order ty1 ty2
-    | (TyATuple ty1, _) -> order TyImmSeq ty2
+    | (TyATuple ty1, _) -> order (TyImmSeq ty1) ty2
     | (TyList tylist1, TyList tylist2) -> order_list tylist1 tylist2
     | (TyList tylist1, TyAList ty2) -> List.for_all (fun ty1 -> order ty1 ty2) tylist1
-    | (TyList _, _) -> order TyMuSeq ty2
+    | (TyList tylist1, _) -> order (TyMuSeq (join tylist1)) ty2
     | (TyAList ty1, TyAList ty2) -> order ty1 ty2
-    | (TyAList _, _) -> order TyMuSeq ty2
+    | (TyAList ty1, _) -> order (TyMuSeq ty1) ty2
     | (TyByteArray _, _) -> order TyAByteArray ty2
-    | (TyAByteArray, _) -> order TyMuSeq ty2
+    | (TyAByteArray, _) -> order (TyMuSeq TyInt) ty2
     | (TySet (ty1, l1), TySet (ty2, l2)) -> l1 = l2 && order ty1 ty2
     | (TySet (ty1, l1), TyASet ty2) -> order ty1 ty2  
     | (TyASet ty1, TyASet ty2) -> order ty1 ty2
@@ -99,8 +106,8 @@ let rec order ty1 ty2 =
       List.for_all (fun (id1, ty1) ->
         List.exists (fun (id2, ty2) -> id1 = id2 && order ty1 ty2) idtylist2)
         idtylist1
-    | (TyFunction (tylist1, ty1), TyFunction (tylist2, ty2)) -> raise NotImplemented (* TODO *)
-    | (TyVar (name1, loc1, n1, ty1), TyVar (name2, loc2, n2, ty2)) -> name1 = name2 && loc1 = loc2 && n1 == n2 && (order ty1 ty2)
+    | (TyFunction (tylist1, ty1), TyFunction (tylist2, ty2)) -> order_list tylist1 tylist2 && order ty1 ty2
+    | (TyVar (name1, loc1, n1, ty1), TyVar (name2, loc2, n2, ty2)) -> name1 = name2 && loc1 = loc2 && n1 == n2 && (order ty2 ty1)
     | _ -> false
 and order_set tylist1 tylist2 =
   List.for_all
@@ -113,8 +120,7 @@ and order_list tylist1 tylist2 =
   try
     List.for_all2 (fun ty1 ty2 -> order ty1 ty2) tylist1 tylist2
   with Invalid_argument _ -> false
-
-let rec join tylist =
+and join tylist =
   let rec join_typair ty1 ty2 =
     if order ty1 ty2 then ty2
     else if order ty2 ty1 then ty1
@@ -134,33 +140,6 @@ let rec meet ty1 ty2 =
   else if order ty2 ty1 then ty2 else
     match (ty1, ty2) with
         _ -> ty1
-
-(** substitue ty1 with ty2 in ty *)      
-let rec subst ty1 ty2 ty = match ty with
-    (* No Change *)
-    TyBot| TyNone| TyNotImplemented| TyEllipsis
-  | TyInt| TyLong| TyBool| TyFloat| TyComplex
-  | TyNumber | TyIntegral | TySeq | TyImmSeq | TyMuSeq | TyFile | TyCallable
-  | TyString _| TyAString| TyUnicode _ 
-  | TyAUnicode| TyByteArray _| TyAByteArray
-  | TyObject -> ty
-  (* map inside *)
-  | TyTuple ty_list -> TyTuple (List.map (fun ty -> subst ty1 ty2 ty) ty_list)
-  | TyATuple ty -> TyATuple (subst ty1 ty2 ty)
-  | TyList ty_list -> TyList (List.map (fun ty -> subst ty1 ty2 ty) ty_list)
-  | TyAList ty -> TyAList (subst ty1 ty2 ty)
-  | TySet (ty, n) -> TySet ((subst ty1 ty2 ty), n)
-  | TyASet ty -> TyASet (subst ty1 ty2 ty)
-  | TyFrozenSet (ty, n) -> TyFrozenSet ((subst ty1 ty2 ty), n)
-  | TyAFrozenSet ty -> TyAFrozenSet (subst ty1 ty2 ty)
-  | TyDict ty_ty_list -> TyDict (List.map (fun (ty_k, ty_v) -> (subst ty1 ty2 ty_k, subst ty1 ty2 ty_v)) ty_ty_list)
-  | TyFunction (ty_list, ty) -> TyFunction (List.map (fun ty -> subst ty1 ty2 ty) ty_list, subst ty1 ty2 ty)
-  | TyGenerator (ty, n) -> TyGenerator (subst ty1 ty2 ty, n)
-  | TyAGenerator ty -> TyAGenerator (subst ty1 ty2 ty)
-  | TyType ty -> TyType (subst ty1 ty2 ty)
-  | TyUnion ty_list -> TyUnion (List.map (fun ty -> subst ty1 ty2 ty) ty_list)
-  | TyClass key_ty_list -> TyClass (List.map (fun (key, ty) -> (key, subst ty1 ty2 ty)) key_ty_list)
-  | TyVar _ -> if ty = ty1 then ty2 else ty
       
 let to_strings ty_list to_string = match ty_list with
     [] -> ""
@@ -220,14 +199,50 @@ let rec to_string ty = match ty with
     ^ ")"
   | TyCallable -> "TyCallable"
   | TyFile -> "TyFile"
-  | TyMuSeq -> "TyMuSeq"
-  | TyImmSeq -> "TyImmSeq"
-  | TySeq -> "TySeq"
+  | TyMuSeq ty -> "TyMuSeq(" ^ (to_string ty) ^")"
+  | TyImmSeq ty -> "TyImmSeq(" ^ (to_string ty) ^")"
+  | TySeq ty -> "TySeq(" ^ (to_string ty) ^")"
   | TyIntegral -> "TyIntegral"
   | TyNumber -> "TyNumber"
 
+(** substitue ty1 with ty2 in ty *)      
+let rec subst ty1 ty2 ty = match ty with
+    (* No Change *)
+    TyBot| TyNone| TyNotImplemented| TyEllipsis
+  | TyInt| TyLong| TyBool| TyFloat| TyComplex
+  | TyNumber | TyIntegral  | TyFile | TyCallable
+  | TyString _| TyAString| TyUnicode _ 
+  | TyAUnicode| TyByteArray _| TyAByteArray
+  | TyObject -> ty
+  (* map inside *)
+  | TySeq ty -> TySeq (subst ty1 ty2 ty)
+  | TyImmSeq ty -> TyImmSeq (subst ty1 ty2 ty)
+  | TyMuSeq ty -> TyMuSeq (subst ty1 ty2 ty)
+  | TyTuple ty_list -> TyTuple (List.map (fun ty -> subst ty1 ty2 ty) ty_list)
+  | TyATuple ty -> TyATuple (subst ty1 ty2 ty)
+  | TyList ty_list -> TyList (List.map (fun ty -> subst ty1 ty2 ty) ty_list)
+  | TyAList ty -> TyAList (subst ty1 ty2 ty)
+  | TySet (ty, n) -> TySet ((subst ty1 ty2 ty), n)
+  | TyASet ty -> TyASet (subst ty1 ty2 ty)
+  | TyFrozenSet (ty, n) -> TyFrozenSet ((subst ty1 ty2 ty), n)
+  | TyAFrozenSet ty -> TyAFrozenSet (subst ty1 ty2 ty)
+  | TyDict ty_ty_list -> TyDict (List.map (fun (ty_k, ty_v) -> (subst ty1 ty2 ty_k, subst ty1 ty2 ty_v)) ty_ty_list)
+  | TyFunction (ty_list, ty) -> TyFunction (List.map (fun ty -> subst ty1 ty2 ty) ty_list, subst ty1 ty2 ty)
+  | TyGenerator (ty, n) -> TyGenerator (subst ty1 ty2 ty, n)
+  | TyAGenerator ty -> TyAGenerator (subst ty1 ty2 ty)
+  | TyType ty -> TyType (subst ty1 ty2 ty)
+  | TyUnion ty_list -> TyUnion (List.map (fun ty -> subst ty1 ty2 ty) ty_list)
+  | TyClass key_ty_list -> TyClass (List.map (fun (key, ty) -> (key, subst ty1 ty2 ty)) key_ty_list)
+  | TyVar (name, loc, n, ty_con) ->
+    if ty = ty1 then ty2 else ty    
       
-(* errors *)
-exception RuntimeError of string
-exception TypeError of string * Ast.loc
-exception TypeWarning of string * Ast.loc
+let make_prefn (tylist, ret_ty) =
+  let tyvar_list =
+    List.rev
+      (List.fold_left2
+         (fun tyvar_list ty n -> TyVar("predefined", (0,0), n, ty)::tyvar_list)
+         []
+         tylist
+         (Lib.range 1 (List.length tylist)))
+  in TyFunction(tyvar_list, ret_ty)
+    

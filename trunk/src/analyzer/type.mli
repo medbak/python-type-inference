@@ -42,9 +42,9 @@ type ty =
   | TyObject                 (** Object type, represents top *)
   | TyType of ty             (** Type type *)
   | TyUnion of ty list       (** Union type *)
-  | TySeq                    (** Sequence type *)
-  | TyImmSeq                 (** Immutable Sequence type *)
-  | TyMuSeq                  (** Mutable Sequence type *)
+  | TySeq of ty              (** Sequence type *)
+  | TyImmSeq of ty           (** Immutable Sequence type *)
+  | TyMuSeq of ty            (** Mutable Sequence type *)
   | TyFile                   (** File type *)
   | TyCallable               (** Callable type *)
   | TyClass of (string * ty) list (** Class type. Map from attribute/method names -> their types *)
@@ -80,4 +80,5 @@ val join : ty list -> ty
 
 val to_string : ty -> string
 
+val make_prefn : ty list * ty -> ty
   
