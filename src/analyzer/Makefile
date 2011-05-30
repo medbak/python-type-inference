@@ -1,4 +1,4 @@
-all: analyzer doc
+all: analyzer
 
 analyzer:
 	ocamlbuild -classic-display main.native -cflag -dtypes

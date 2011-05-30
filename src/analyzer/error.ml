@@ -24,5 +24,5 @@ let handle_exn v =
 	| Type.RuntimeError s ->
 	  Printf.eprintf ">> runtime error: %s\n" s
 	| Type.TypeError (s, (line, col)) ->
-	  Printf.eprintf ">> type error: %s at (%d, %d)\n" s line col
+	  Printf.eprintf ">> TypeError: %s at line %d, column %d\n" s line col
 	|  _ -> raise v

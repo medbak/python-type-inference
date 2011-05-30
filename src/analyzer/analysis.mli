@@ -10,7 +10,6 @@
 type ctl = CtlBreak         (** Break Statement *)
            | CtlContinue    (** Continue Statement *)
            | CtlReturn      (** Return Statement *)
-           | CtlYield
 type size = INT of int | UNKNOWN
 
 (** {6 Values} *)
