@@ -4,6 +4,7 @@
 Below are some of the papers we found relating to static analysis for Python and other scripting languages.
  * Dimitrios Vardoulakis and Olin Shivers. CFA2: a Context-Free Approach to Control-Flow Analysis. ESOP 2010
      * http://www.ccs.neu.edu/home/dimvar/papers/cfa2-NU-CCIS-10-01.pdf
+     * Slides: http://www.ccs.neu.edu/home/dimvar/papers/cfa2-esop-slides.pdf
  * Reps, T., Horwitz, S., and Sagiv, M., Precise interprocedural dataflow analysis via graph reachability. POPL 1995
      * http://www.cs.wisc.edu/wpis/papers/popl95.pdf
  *  Simon Holm Jensen, Anders Møller, Peter Thiemann. “Interprocedural Analysis with Lazy Propagation”. SAS 2010.
