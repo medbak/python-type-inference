@@ -336,17 +336,17 @@ and aexp (env : Env.t) (mem : Mem.t) (exp : Ast.expr) : (Tyset.t * Mem.t) = matc
     (* TODO: handle cases where A) name is not in the env or B) addr is not in the mem *)
   | Name (id, ctx, loc) ->
     let addrset =
-      try
-        Env.find id env
+      try Env.find id env
       with Not_found -> raise (RuntimeError ("Variable "^ id ^ " is not defined at " ^ (Ast.string_of_loc loc)))
     in
-    let tyset_set = BatPSet.map (fun addr -> Mem.find addr mem) addrset in
-    let tyset =
-      BatPSet.fold
-        Tyset.join
-        tyset_set
-        Tyset.empty
+    let tyset_set =
+      BatPSet.map
+        (fun addr ->
+          try Mem.find addr mem
+          with Not_found -> raise (RuntimeError ("Address "^ (Addr.string_of_addr addr) ^ " has no entry.")))
+        addrset
     in
+    let tyset = BatPSet.fold Tyset.join tyset_set Tyset.empty in
     (tyset, mem)
 (*    begin
       try
@@ -384,9 +384,9 @@ and atarget_list env mem target_list tyset =
 and atarget env mem target tyset =
   match target with
       Name (id, exp_ctx, loc) ->
-        let addrset = Env.find id env in
+        let (env', addrset) = Env.get id env in
         let mem' = BatPSet.fold (fun addr mem -> Mem.bind addr tyset mem) addrset mem in
-        raise (NotImplemented "atarget")
+        (env', mem')
     | _ -> raise (NotImplemented "atarget")
 (*    | List (exp_list, exp_ctx, loc) 
     | Tuple (exp_list, exp_ctx, loc) ->
@@ -456,7 +456,7 @@ and astat env mem stat =
     (* TODO *)    
     | Assign (targets, value, loc) ->
       let (tyset, mem') = aexp env mem value in
-      raise (NotImplemented "Assign")
+      atarget_list env mem targets tyset
 (*  (Some (atarget_list env' targets ty), envlist) *)
     (* TODO *)    
     | AugAssign (target, op, value, loc) -> raise (NotImplemented "AugAssing")
