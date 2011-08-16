@@ -453,11 +453,9 @@ and astat env mem stat =
     | Return (value_op, loc) -> raise (NotImplemented "Return")
     (* TODO *)    
     | Delete (targets, loc) -> raise (NotImplemented "Delete")
-    (* TODO *)    
     | Assign (targets, value, loc) ->
       let (tyset, mem') = aexp env mem value in
-      atarget_list env mem targets tyset
-(*  (Some (atarget_list env' targets ty), envlist) *)
+      atarget_list env mem' targets tyset
     (* TODO *)    
     | AugAssign (target, op, value, loc) -> raise (NotImplemented "AugAssing")
     (* TODO *)    
