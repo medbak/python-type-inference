@@ -59,7 +59,11 @@ let rec order ty1 ty2 =
       (TyBot, _) -> true
     | (_, TyObject) -> true
     (** Seq *)
+    | (TyCString _, TyString _) -> true
+    | (TyCString _, TyAString) -> true
     | (TyString _, TyAString) -> true
+    | (TyCUnicode _, TyUnicode _) -> true
+    | (TyCUnicode _, TyAUnicode) -> true
     | (TyUnicode _, TyAUnicode) -> true
     (* Tuple *)
     | (TyTuple ls_list1, TyTuple ls_list2) -> Addrset.order_list ls_list1 ls_list2
