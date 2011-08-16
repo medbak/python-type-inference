@@ -1,29 +1,25 @@
 (* Soonho Kong (soonhok@cs.cmu.edu) *)
-open Batteries
-open Ast
-open Type
 
-type t = (string, Type.ty) Batteries.PMap.t
+type t = (string, Addrset.t) BatPMap.t
 
-let empty = PMap.empty
+let empty = BatPMap.empty
 
-let bind var ty env = PMap.add var ty env    
-let find var env = PMap.find var env
+let bind var locset env = BatPMap.add var locset env    
+let find var env = BatPMap.find var env
   
 let join env1 env2 =
-  PMap.foldi
+  BatPMap.foldi
     (fun key value1 env ->
       try
-        let value2 = PMap.find key env in
-        let join_result = Type.join [value1; value2] in
-        PMap.add key join_result env
+        let value2 = BatPMap.find key env in
+        let join_result = Addrset.join value1 value2 in
+        BatPMap.add key join_result env
       with
           Not_found ->
-            PMap.add key value1 env
+            BatPMap.add key value1 env
     )
     env1
     env2
-
   
 let joinop envop1 envop2 = match (envop1, envop2) with
     (None, None) -> None
@@ -32,19 +28,19 @@ let joinop envop1 envop2 = match (envop1, envop2) with
   | (Some env1, Some env2) -> Some (join env1 env2)
 
 let order env1 env2 =
-  PMap.foldi
+  BatPMap.foldi
     (fun key value1 result ->
       try 
-        let value2 = PMap.find key env2 in
-        order value1 value2
+        let value2 = BatPMap.find key env2 in
+        Addrset.order value1 value2
       with Not_found -> false)
     env1
     true
     
 let to_string env =
-  PMap.foldi
+  BatPMap.foldi
     (fun key value str ->
-      str ^ key ^ " ==> " ^ (Type.to_string value) ^ "\n")
+      str ^ key ^ " ==> " ^ (Addrset.to_string value) ^ "\n")
     env
     ""
 
