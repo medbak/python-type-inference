@@ -6,7 +6,15 @@ let empty = BatPMap.empty
 
 let bind var locset env = BatPMap.add var locset env    
 let find var env = BatPMap.find var env
-  
+let get var env =
+  try
+    (env, BatPMap.find var env)
+  with
+      Not_found ->
+        let new_addrset = Addrset.singleton (Addr.get ()) in
+        let env' = bind var new_addrset env in
+        (env', new_addrset)
+          
 let join env1 env2 =
   BatPMap.foldi
     (fun key value1 env ->
