@@ -1,10 +1,10 @@
 Requirement: Need to have the following OCaml packages installed:
-    - camomile  : Unicode Library camomile.sourceforge.net
-                  http://camomile.sourceforge.net
-    - findlib   : Library Manager
-                  http://projects.camlcity.org/projects/findlib.html
-    - batteries : Extended Libraries
-                  http://batteries.forge.ocamlcore.org/
+    - camomile-0.8.3	: Unicode Library camomile.sourceforge.net
+                 	  http://camomile.sourceforge.net
+    - findlib-1.2.7   	: Library Manager
+                  	  http://projects.camlcity.org/projects/findlib.html
+    - batteries-1.4.0 	: Extended Libraries
+                	  http://batteries.forge.ocamlcore.org/
 
 Compile:
 	make
