@@ -338,7 +338,7 @@ and aexp (env : Env.t) (mem : Mem.t) (exp : Ast.expr) : (Tyset.t * Mem.t) = matc
     let addrset =
       try
         Env.find id env
-      with Not_found -> Addrset.singleton (Addr.get ())
+      with Not_found -> raise (RuntimeError ("Variable "^ id ^ " is not defined at " ^ (Ast.string_of_loc loc)))
     in
     let tyset_set = BatPSet.map (fun addr -> Mem.find addr mem) addrset in
     let tyset =
@@ -510,10 +510,10 @@ and amodule env mem modu = match modu with
   | Interactive stmts ->
     astat_list env mem stmts
   | Expression exp ->
-    let (ty, mem') = aexp env mem exp in
-    let new_loc = Locset.get_loc () in
-    let mem'' = Mem.bind new_loc ty mem' in
-    let env' = Env.bind "!it" (Locset.singleton new_loc) env in
+    let (tyset, mem') = aexp env mem exp in
+    let new_addr = Addr.get () in
+    let mem'' = Mem.bind new_addr tyset mem' in
+    let env' = Env.bind "!it" (Addrset.singleton new_addr) env in
     (env', mem'')
 
 let analysis = amodule
