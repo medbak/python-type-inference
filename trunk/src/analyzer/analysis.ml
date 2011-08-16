@@ -458,8 +458,16 @@ and astat env mem stat =
       atarget_list env mem' targets tyset
     (* TODO *)    
     | AugAssign (target, op, value, loc) -> raise (NotImplemented "AugAssing")
-    (* TODO *)    
-    | Print (dest_op, values, nl, loc) -> raise (NotImplemented "Print")
+    (* TODO:
+       1. Support string conversion (See http://docs.python.org/reference/expressions.html 5.2.9)
+       2. Extended form (ex: print to file) (See http://docs.python.org/reference/simple_stmts.html#grammar-token-print_stmt 6.6)
+    *)    
+    | Print (dest_op, values, nl, loc) ->
+      let (tyset_list, mem') = aexp_list env mem values in
+      if List.for_all (fun tyset -> BatPSet.for_all (fun ty -> Type.order ty TyAString) tyset) tyset_list then
+        (env, mem')
+      else
+        raise (TypeError ("Non string type is printed", loc))
     (* TODO *)    
     | For (target, iter, body, orelse, loc) -> raise (NotImplemented "For")
     (* TODO *)    
