@@ -180,3 +180,28 @@ let rec to_string ty = match ty with
          )
       )
     ^ ")"
+
+let rec add ty1 ty2 = match (ty1, ty2) with
+  | (TyCBool true, _)  -> add (TyCInt 1) ty2
+  | (TyCBool false, _) -> add (TyCInt 0) ty2
+  | (_, TyCBool true)  -> add ty1 (TyCInt 1)
+  | (_, TyCBool false) -> add ty1 (TyCInt 0)
+  | (TyBool, _) -> add TyInt ty2
+  | (_, TyBool) -> add ty1 TyInt
+  | (TyCInt n, TyCInt m) -> TyCInt (n + m)
+  | (TyCInt n, _) -> raise NotImplemented
+  | (TyCInt n, TyInt) -> 
+  | (TyInt, TyInt)    -> TyInt
+  | (TyInt, _) -> raise NotImplemented
+  | (TyCLong n, TyCInt m) -> TyCLong (n + m)
+  | (TyCLong n, TyCLong m) -> TyCLong (n + m)
+  | (TyCLong n, _) -> raise NotImplemented
+  | (TyCLong n, TyInt)  
+  | (TyCLong n, TyLong)  
+  | (TyLong, TyCInt _)  
+  | (TyLong, TyInt)     
+  | (TyLong, TyCLong _) 
+  | (TyLong, TyLong)    -> TyLong
+  | (TyCFloat n, TyCInt m) -> TyCFloat (n + (float_of_int m))
+  | (TyCFloat n, TyInt) -> TyFloat
+
