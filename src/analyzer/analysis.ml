@@ -105,58 +105,28 @@ and aexp (env : Env.t) (mem : Mem.t) (exp : Ast.expr) : (Tyset.t * Mem.t) = matc
   | BinOp (left, op, right, loc) ->
     (* TODO: add more binary operation *)      
     let binop ty1 ty2 op mem = match op with
-      | Add -> (Tyset.singleton (Type.add ty1 ty2), mem)
-      | _ -> (Tyset.singleton (Type.add ty1 ty2), mem)
-        
-        
-      (* | (_, TyBot, _) -> (Tyset.singleton TyBot, mem) *)
-      (* | (_, _, TyBot) -> (Tyset.singleton TyBot, mem) *)
-      (* (\* TyCint *\) *)
-      (* | (Add, TyCInt n, TyCInt m) -> (Tyset.singleton (TyCInt (n+m)), mem) *)
-      (* | (Add, TyCInt n, TyCLong m) -> (Tyset.singleton (TyCLong (n+m)), mem) *)
-      (* | (Add, TyCInt n, TyCFloat m) -> (Tyset.singleton (TyCFloat ((float_of_int n) +. m)), mem) *)
-      (* | (Add, TyCInt n, TyCComplex (r, i)) -> (Tyset.singleton (TyCComplex ((float_of_int n) +. r, i)), mem) *)
-      (* | (Add, TyCInt n, TyInt) -> (Tyset.singleton TyInt, mem) *)
-      (* | (Add, TyCInt n, TyLong) -> (Tyset.singleton TyLong, mem) *)
-      (* | (Add, TyCInt n, TyFloat) -> (Tyset.singleton TyFloat, mem) *)
-      (* | (Add, TyCInt n, TyComplex) -> (Tyset.singleton TyComplex, mem) *)
-        
-      (* | (Sub, TyCInt n, TyCInt m) -> (Tyset.singleton (TyCInt (n - m)), mem) *)
-      (* | (Sub, TyCInt n, TyCLong m) -> (Tyset.singleton (TyCLong (n - m)), mem) *)
-      (* | (Sub, TyCInt n, TyCFloat m) -> (Tyset.singleton (TyCFloat ((float_of_int n) -. m)), mem) *)
-      (* | (Sub, TyCInt n, TyCComplex (r, i)) -> (Tyset.singleton (TyCComplex ((float_of_int n) -. r, i)), mem) *)
-      (* | (Sub, TyCInt n, TyInt) -> (Tyset.singleton TyInt, mem) *)
-      (* | (Sub, TyCInt n, TyLong) -> (Tyset.singleton TyLong, mem) *)
-      (* | (Sub, TyCInt n, TyFloat) -> (Tyset.singleton TyFloat, mem) *)
-      (* | (Sub, TyCInt n, TyComplex) -> (Tyset.singleton TyComplex, mem) *)
-        
-      (* | (Mult, TyCInt n, TyCInt m) -> (Tyset.singleton (TyCInt (n*m)), mem) *)
-      (* | (Mult, TyCInt n, TyCLong m) -> (Tyset.singleton (TyCLong (n*m)), mem) *)
-      (* | (Mult, TyCInt n, TyCFloat m) -> (Tyset.singleton (TyCFloat ((float_of_int n) *. m)), mem) *)
-      (* | (Mult, TyCInt n, TyCComplex (r, i)) -> (Tyset.singleton (TyCComplex ((float_of_int n) *. r, i)), mem) *)
-      (* | (Mult, TyCInt n, TyInt) -> (Tyset.singleton TyInt, mem) *)
-      (* | (Mult, TyCInt n, TyLong) -> (Tyset.singleton TyLong, mem) *)
-      (* | (Mult, TyCInt n, TyFloat) -> (Tyset.singleton TyFloat, mem) *)
-      (* | (Mult, TyCInt n, TyComplex) -> (Tyset.singleton TyComplex, mem) *)
-        
-      (* | (Div, TyCInt n, TyCInt m) -> (Tyset.singleton (TyCInt (n/m)), mem) *)
-      (* | (Div, TyCInt n, TyCLong m) -> (Tyset.singleton (TyCLong (n/m)), mem) *)
-      (* | (Div, TyCInt n, TyCFloat m) -> (Tyset.singleton (TyCFloat ((float_of_int n) /. m)), mem) *)
-      (* | (Div, TyCInt n, TyCComplex (r, i)) -> (Tyset.singleton (TyCComplex ((float_of_int n) /. r, i)), mem) *)
-      (* | (Div, TyCInt n, TyInt) -> (Tyset.singleton TyInt, mem) *)
-      (* | (Div, TyCInt n, TyLong) -> (Tyset.singleton TyLong, mem) *)
-      (* | (Div, TyCInt n, TyFloat) -> (Tyset.singleton TyFloat, mem) *)
-      (* | (Div, TyCInt n, TyComplex) -> (Tyset.singleton TyComplex, mem) *)
-
-        
-      (* (\* TyInt *\) *)
-        
-      (* | _ -> (Tyset.of_list [ty1;ty2], mem) *)
+      | Add -> Tyset.add ty1 ty2 mem
+      | _ -> Tyset.add ty1 ty2 mem in
+    let rbinop ty1 ty2 op mem = match op with
+      | Add -> Tyset.radd ty2 ty1 mem
+      | _ -> Tyset.radd ty2 ty1 mem in
+    let binop_helper ty1 ty2 op mem =
+      let (tyset1, mem') = binop ty1 ty2 op mem in
+      if not (BatPSet.exists (fun ty -> ty = TyNotImplemented) tyset1) then
+        (tyset1, mem')
+      else
+        begin
+          let (tyset2, mem'') = rbinop ty1 ty2 op mem' in
+          if not (BatPSet.exists (fun ty -> ty = TyNotImplemented) tyset2) then
+            (tyset2, mem'')
+          else
+            raise (TypeError ("BinOP", loc))
+        end
     in
     let (tyset_left, mem') = aexp env mem left in
     let (tyset_right, mem'') = aexp env mem' right in
     let tyset_product : (Type.ty * Type.ty) list = Tyset.cartesian_product tyset_left tyset_right in
-    let (result_types, result_mems) = List.split (List.map (fun (ty1, ty2) -> binop ty1 ty2 op mem'') tyset_product)
+    let (result_types, result_mems) = List.split (List.map (fun (ty1, ty2) -> binop_helper ty1 ty2 op mem'') tyset_product)
     in
     (Tyset.join_list result_types, Mem.join_list result_mems)
 (*      
