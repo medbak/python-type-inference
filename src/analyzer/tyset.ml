@@ -189,6 +189,39 @@ let rec add ty1 ty2 mem = match (ty1, ty2) with
   (* TODO: Handle Class *)
   | (TyClass _, _) -> (singleton (TyNotImplemented), mem)
 
+let rec sub ty1 ty2 mem = match (ty1, ty2) with
+    _ -> raise NotImplemented
+
+let rec mult ty1 ty2 mem = match (ty1, ty2) with
+    _ -> raise NotImplemented
+
+let rec div ty1 ty2 mem = match (ty1, ty2) with
+    _ -> raise NotImplemented
+
+let rec modu ty1 ty2 mem = match (ty1, ty2) with
+    _ -> raise NotImplemented
+
+let rec pow ty1 ty2 mem = match (ty1, ty2) with
+    _ -> raise NotImplemented
+
+let rec lshift ty1 ty2 mem = match (ty1, ty2) with
+    _ -> raise NotImplemented
+
+let rec rshift ty1 ty2 mem = match (ty1, ty2) with
+    _ -> raise NotImplemented
+
+let rec bor ty1 ty2 mem = match (ty1, ty2) with
+    _ -> raise NotImplemented
+
+let rec bxor ty1 ty2 mem = match (ty1, ty2) with
+    _ -> raise NotImplemented
+
+let rec band ty1 ty2 mem = match (ty1, ty2) with
+    _ -> raise NotImplemented
+
+let rec fdiv ty1 ty2 mem = match (ty1, ty2) with
+    _ -> raise NotImplemented
+
 let rec radd ty1 ty2 mem = match (ty1, ty2) with
   (* Bool *)
   | (TyCBool true, _)  -> radd (TyCInt 1) ty2 mem
@@ -335,3 +368,36 @@ let rec radd ty1 ty2 mem = match (ty1, ty2) with
   (* TODO: Handle Class *)
   | (TyClass _, _) -> (singleton (TyNotImplemented), mem)
     
+
+let rec rsub ty1 ty2 mem = match (ty1, ty2) with
+    _ -> raise NotImplemented
+      
+let rec rmult ty1 ty2 mem = match (ty1, ty2) with
+    _ -> raise NotImplemented
+
+let rec rdiv ty1 ty2 mem = match (ty1, ty2) with
+    _ -> raise NotImplemented
+
+let rec rmodu ty1 ty2 mem = match (ty1, ty2) with
+    _ -> raise NotImplemented
+
+let rec rpow ty1 ty2 mem = match (ty1, ty2) with
+    _ -> raise NotImplemented
+
+let rec rlshift ty1 ty2 mem = match (ty1, ty2) with
+    _ -> raise NotImplemented
+
+let rec rrshift ty1 ty2 mem = match (ty1, ty2) with
+    _ -> raise NotImplemented
+
+let rec rbor ty1 ty2 mem = match (ty1, ty2) with
+    _ -> raise NotImplemented
+
+let rec rbxor ty1 ty2 mem = match (ty1, ty2) with
+    _ -> raise NotImplemented
+
+let rec rband ty1 ty2 mem = match (ty1, ty2) with
+    _ -> raise NotImplemented
+
+let rec rfdiv ty1 ty2 mem = match (ty1, ty2) with
+    _ -> raise NotImplemented
