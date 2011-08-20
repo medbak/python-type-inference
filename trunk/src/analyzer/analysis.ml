@@ -104,32 +104,54 @@ and aexp (env : Env.t) (mem : Mem.t) (exp : Ast.expr) : (Tyset.t * Mem.t) = matc
   (* TODO : Not implemented *)
   | BinOp (left, op, right, loc) ->
     (* TODO: add more binary operation *)      
-    let binop ty1 ty2 op mem = match op with
-      | Add -> Tyset.add ty1 ty2 mem
-      | _ -> Tyset.add ty1 ty2 mem in
-    let rbinop ty1 ty2 op mem = match op with
-      | Add -> Tyset.radd ty2 ty1 mem
-      | _ -> Tyset.radd ty2 ty1 mem in
-    let binop_helper ty1 ty2 op mem =
-      let (tyset1, mem') = binop ty1 ty2 op mem in
-      if not (BatPSet.exists (fun ty -> ty = TyNotImplemented) tyset1) then
-        (tyset1, mem')
-      else
-        begin
-          let (tyset2, mem'') = rbinop ty1 ty2 op mem' in
-          if not (BatPSet.exists (fun ty -> ty = TyNotImplemented) tyset2) then
-            (tyset2, mem'')
-          else
-            raise (TypeError ("BinOP", loc))
-        end
-    in
-    let (tyset_left, mem') = aexp env mem left in
-    let (tyset_right, mem'') = aexp env mem' right in
-    let tyset_product : (Type.ty * Type.ty) list = Tyset.cartesian_product tyset_left tyset_right in
-    let (result_types, result_mems) = List.split (List.map (fun (ty1, ty2) -> binop_helper ty1 ty2 op mem'') tyset_product)
-    in
-    (Tyset.join_list result_types, Mem.join_list result_mems)
-
+    let binop ty1 ty2 op mem =
+      match op with
+          Add -> Tyset.add ty1 ty2 mem
+        | Sub -> Tyset.sub ty1 ty2 mem
+        | Mult -> Tyset.mult ty1 ty2 mem
+        | Div -> Tyset.div ty1 ty2 mem
+        | Mod -> Tyset.modu ty1 ty2 mem
+        | Pow -> Tyset.pow ty1 ty2 mem
+        | LShift -> Tyset.lshift ty1 ty2 mem
+        | RShift -> Tyset.rshift ty1 ty2 mem
+        | BitOr -> Tyset.bor ty1 ty2 mem
+        | BitXor -> Tyset.bxor ty1 ty2 mem
+        | BitAnd -> Tyset.band ty1 ty2 mem
+        | FloorDiv -> Tyset.fdiv ty1 ty2 mem
+    in let rbinop ty1 ty2 op mem =
+         match op with
+             Add -> Tyset.radd ty2 ty1 mem
+           | Sub -> Tyset.rsub ty2 ty1 mem
+           | Mult -> Tyset.rmult ty2 ty1 mem
+           | Div -> Tyset.rdiv ty2 ty1 mem
+           | Mod -> Tyset.rmodu ty2 ty1 mem
+           | Pow -> Tyset.rpow ty2 ty1 mem
+           | LShift -> Tyset.rlshift ty2 ty1 mem
+           | RShift -> Tyset.rrshift ty2 ty1 mem
+           | BitOr -> Tyset.rbor ty2 ty1 mem
+           | BitXor -> Tyset.rbxor ty2 ty1 mem
+           | BitAnd -> Tyset.rband ty2 ty1 mem
+           | FloorDiv -> Tyset.rfdiv ty2 ty1 mem
+       in let binop_helper ty1 ty2 op mem =
+            let (tyset1, mem') = binop ty1 ty2 op mem in
+            if not (BatPSet.exists (fun ty -> ty = TyNotImplemented) tyset1) then
+              (tyset1, mem')
+            else
+              begin
+                let (tyset2, mem'') = rbinop ty1 ty2 op mem' in
+                if not (BatPSet.exists (fun ty -> ty = TyNotImplemented) tyset2) then
+                  (tyset2, mem'')
+                else
+                  raise (TypeError ("BinOP", loc))
+              end
+          in
+          let (tyset_left, mem') = aexp env mem left in
+          let (tyset_right, mem'') = aexp env mem' right in
+          let tyset_product : (Type.ty * Type.ty) list = Tyset.cartesian_product tyset_left tyset_right in
+          let (result_types, result_mems) = List.split (List.map (fun (ty1, ty2) -> binop_helper ty1 ty2 op mem'') tyset_product)
+          in
+          (Tyset.join_list result_types, Mem.join_list result_mems)
+            
   (* TODO : Not implemented *)
   | UnaryOp (op, exp, loc) ->
     begin match op with
