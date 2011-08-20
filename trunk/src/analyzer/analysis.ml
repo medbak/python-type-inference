@@ -129,43 +129,6 @@ and aexp (env : Env.t) (mem : Mem.t) (exp : Ast.expr) : (Tyset.t * Mem.t) = matc
     let (result_types, result_mems) = List.split (List.map (fun (ty1, ty2) -> binop_helper ty1 ty2 op mem'') tyset_product)
     in
     (Tyset.join_list result_types, Mem.join_list result_mems)
-(*      
-    
-    begin match op with
-      | Add
-      | Sub
-      | Mult
-      | Div ->
-        begin
-          match (ty_left, ty_right) with
-              (TyInt, TyInt) -> (TyInt, env'')
-            | (TyInt, TyLong) -> (TyLong, env'')
-            | (TyInt, TyFloat) -> (TyFloat, env'')
-            | (TyInt, TyComplex) -> (TyComplex, env'')
-            | (TyLong, TyInt) -> (TyLong, env'')
-            | (TyLong, TyLong) -> (TyLong, env'')
-            | (TyLong, TyFloat) -> (TyFloat, env'')
-            | (TyLong, TyComplex) -> (TyComplex, env'')
-            | (TyFloat, TyInt) -> (TyFloat, env'')
-            | (TyFloat, TyLong) -> (TyFloat, env'')
-            | (TyFloat, TyFloat) -> (TyFloat, env'')
-            | (TyFloat, TyComplex) -> (TyComplex, env'')
-            | (TyComplex, TyInt) -> (TyComplex, env'')
-            | (TyComplex, TyLong) -> (TyComplex, env'')
-            | (TyComplex, TyFloat) -> (TyComplex, env'')
-            | (TyComplex, TyComplex) -> (TyComplex, env'')
-            | _ -> raise (NotImplemented ("BinOP: left_exp = " ^ (to_string ty_left) ^ " , right_exp = " ^ (to_string ty_right)))
-        end
-      | Mod
-      | Pow
-      | LShift
-      | RShift
-      | BitOr
-      | BitXor
-      | BitAnd
-      | FloorDiv -> raise (NotImplemented "BinOP")
-    end
-*)
 
   (* TODO : Not implemented *)
   | UnaryOp (op, exp, loc) ->
