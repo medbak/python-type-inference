@@ -45,6 +45,7 @@ type ty =
   | TyAFrozenSet of addrset        (** Abstract frozenset type *)
   | TyDict of (ty * addrset) list  (** Dict type, maintains (key_type, value_type) list *)
   | TyFunction of Ast.stmt (** Function type, (argument_type list, return_type) *)
+  | TyLambda of (Ast.arguments * Ast.expr * Ast.loc) (** Function type, (argument_type list, return_type) *)
   | TyAFunction of (ty list -> ty) (** Function type, (argument_type list, return_type) *)
   | TyGenerator of addrset * int  (** Concrete generator type which maintains a length of its contents *)
   | TyAGenerator of addrset       (** Abstract generator type *)
@@ -169,6 +170,7 @@ let rec to_string ty = match ty with
         end
         | _ -> raise (RuntimeError "Function type should be either lambda or function definition")
     end
+  | TyLambda _ -> "TyLambda"
   | TyAFunction _ -> "TyAFunction"
   | TyGenerator (locset, l) -> "TyGenerator(" ^ (Addrset.to_string locset) ^ ", "^ (string_of_int l) ^")"
   | TyAGenerator locset -> "TyAGenerator(" ^ (Addrset.to_string locset) ^ ")"

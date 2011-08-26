@@ -1,13 +1,17 @@
 type t = Addr.t BatPSet.t    
 
-let empty = BatPSet.empty    
-    
-let singleton = BatPSet.singleton
+let empty = BatPSet.empty
+
+let singleton addr = BatPSet.singleton addr
+
+let get () =
+  let new_addr = Addr.get () in
+  (new_addr, singleton new_addr)
 
 let order = BatPSet.subset
 
-let order_list locset_list1 locset_list2 =
-  List.for_all2 order locset_list1 locset_list2
+let order_list addrset_list1 addrset_list2 =
+  List.for_all2 order addrset_list1 addrset_list2
 
 let join = BatPSet.union
 
@@ -19,6 +23,6 @@ let diff = BatPSet.diff
 
 let of_list = BatPSet.of_list  
 
-let to_string locset =
-  let str = BatPSet.fold (fun loc str -> str ^ (string_of_int loc) ^ " ") locset "" in
+let to_string addrset =
+  let str = BatPSet.fold (fun loc str -> str ^ (string_of_int loc) ^ " ") addrset "" in
   "{" ^ str ^ "}"
