@@ -15,6 +15,8 @@ let join_list : (t list -> t) = List.fold_left join empty
 
 let meet = BatPSet.intersect
 
+let diff = BatPSet.diff
+
 let of_list = BatPSet.of_list  
 
 let to_string locset =
