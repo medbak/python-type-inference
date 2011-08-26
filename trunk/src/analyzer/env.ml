@@ -4,7 +4,7 @@ type t = (string, Addrset.t) BatPMap.t
 
 let empty = BatPMap.empty
 
-let bind var locset env = BatPMap.add var locset env    
+let bind var addrset env = BatPMap.add var addrset env    
 let find var env = BatPMap.find var env
 let get var env =
   try
@@ -29,12 +29,6 @@ let join env1 env2 =
     env1
     env2
   
-let joinop envop1 envop2 = match (envop1, envop2) with
-    (None, None) -> None
-  | (Some env, None) -> Some env
-  | (None, Some env) -> Some env
-  | (Some env1, Some env2) -> Some (join env1 env2)
-
 let order env1 env2 =
   BatPMap.foldi
     (fun key value1 result ->

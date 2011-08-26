@@ -163,7 +163,7 @@ and aexp (env : Env.t) (mem : Mem.t) (exp : Ast.expr) : (Tyset.t * Mem.t) = matc
       | USub -> raise (NotImplemented "UnaryOp")
     end
   (* TODO : Not implemented *)
-  | Lambda (args, body, loc) -> (Tyset.singleton (TyFunction (Expr (Lambda(args, body, loc), loc))), mem)
+  | Lambda (args, body, loc) -> (Tyset.singleton (TyLambda (args, body, loc)), mem)
   | IfExp (bexp, true_exp, false_exp, loc) ->
     let (_, mem') = aexp env mem bexp in
     let (true_tyset, true_mem) = aexp env mem' true_exp in
@@ -238,10 +238,47 @@ and aexp (env : Env.t) (mem : Mem.t) (exp : Ast.expr) : (Tyset.t * Mem.t) = matc
      3. The only callable type is TyFunction. We do not support
         - class method, class initialization, etc.
   *)
-  | Call (func, args, keywords, starargs, kwargs, loc) -> raise (NotImplemented "Call")
-(*    begin
-      let (func_ty, env') = aexp env func in
-      let (arg_ty_list, env'') = aexp_list env args in
+  | Call (func, args, keywords, starargs, kwargs, loc) -> 
+    begin
+      let (func_tyset, mem') = aexp env mem func in (* eval function *)
+      let (arg_tyset_list, mem'') = aexp_list env mem' args in (*eval arguments *)
+      let bind (env, mem) param arg_tyset =
+        let (new_addr, new_addrset) = Addrset.get () in
+        let env' : Env.t = Env.bind param new_addrset env in
+        let mem' : Mem.t = Mem.bind new_addr arg_tyset mem in
+        (env', mem')
+      in
+      let bind_list env mem param_list arg_tyset_list =
+        List.fold_left2 bind (env, mem) param_list arg_tyset_list
+      in
+      let extract_params arguments =
+        let (expr_list, _, _, _) = arguments in
+        List.map
+          (fun expr -> match expr with
+              Name (id, _, _) -> id
+            | _ -> raise (ShouldNotHappen "Non-name is in the arguments"))
+          expr_list
+      in
+      let call_lambda env mem (arguments, expr, loc) arg_tyset_list =
+        let (env', mem') = bind_list env mem (extract_params arguments) arg_tyset_list in
+        aexp env' mem' expr
+      in
+      let tyset_mem_set = 
+        BatPSet.map
+          (fun ty -> match ty with
+              TyLambda (arguments, expr, loc) ->
+                call_lambda env mem'' (arguments, expr, loc) arg_tyset_list
+            | _ -> raise (NotImplemented "Call other than Lambda")
+          )
+          func_tyset
+      in
+      BatPSet.fold
+        (fun (tyset1, mem1) (tyset2, mem2) -> (Tyset.join tyset1 tyset2, Mem.join mem1 mem2))
+        tyset_mem_set
+        (Tyset.empty, Mem.empty)
+    end
+  (*
+
       match func_ty with
           TyFunction (param_ty_list, ret_ty) ->
             let ret_ty' =
@@ -344,7 +381,7 @@ and aexp (env : Env.t) (mem : Mem.t) (exp : Ast.expr) : (Tyset.t * Mem.t) = matc
       try Env.find id env
       with Not_found -> raise (RuntimeError ("Variable "^ id ^ " is not defined at " ^ (Ast.string_of_loc loc)))
     in
-    let tyset_set =
+    let tyset_set : Tyset.t BatPSet.t =
       BatPSet.map
         (fun addr ->
           try Mem.find addr mem
