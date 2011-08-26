@@ -1,0 +1,144 @@
+\documentclass[10pt]{article} 
+\usepackage{amssymb}
+\usepackage{amsmath} 
+\usepackage{enumerate} 
+\usepackage{hyperref}
+% \usepackage{xspace} 
+\synctex=1
+
+\title{Note on Python Type Analysis}
+\author{Soonho Kong}
+\newcommand{\sem}[1]{[\![#1]\!]}
+
+\begin{document}
+\maketitle
+\section{AST}
+\begin{verbatim}
+type modu = Module of stmt list
+            | Interactive of stmt list
+            | Expression of expr
+and stmt = FunctionDef of string * arguments * stmt list * expr list * loc
+           | ClassDef of string * expr list * stmt list * expr list * loc
+           | Return of expr option * loc
+           | Delete of expr list * loc
+           | Assign of expr list * expr * loc
+           | AugAssign of expr * operator * expr * loc
+           | Print of expr option * expr list * bool * loc
+           | For of expr * expr * stmt list * stmt list * loc
+           | While of expr * stmt list * stmt list * loc
+           | If of expr * stmt list * stmt list * loc
+           | With of expr * expr option * stmt list * loc
+           | Raise of expr option * expr option * expr option * loc
+           | TryExcept of stmt list * excepthandler list * stmt list * loc
+           | TryFinally of stmt list * stmt list * loc
+           | Assert of expr * expr option * loc
+           | Import of alias list * loc
+           | ImportFrom of identifier option * alias list * int option * loc
+           | Exec of expr * expr option * expr option * loc
+           | Global of identifier list * loc
+           | Expr of expr * loc
+           | Pass of loc
+           | Break of loc
+           | Continue of loc
+\end{verbatim}
+\begin{verbatim}
+and expr = BoolOp of boolop * expr list * loc
+           | BinOp of expr * operator * expr * loc
+           | UnaryOp of unaryop * expr * loc
+           | Lambda of arguments * expr * loc
+           | IfExp of expr * expr * expr * loc
+           | Dict of expr list * expr list * loc
+           | Set of expr list * loc
+           | ListComp of expr * comprehension list * loc
+           | SetComp of expr * comprehension list * loc
+           | DictComp of expr * expr * comprehension list * loc
+           | GeneratorExp of expr * comprehension list * loc
+           | Yield of expr option * loc
+           | Compare of expr * cmpop list * expr list * loc
+           | Call of expr * expr list * keyword list * expr option * expr option * loc
+           | Repr of expr * loc
+           | Int of int * loc
+           | Long of int * loc 
+           | Float of float * loc
+           | Complex of float * float * loc                
+           | Str of string * loc
+           | UStr of UTF8.t * loc
+           | Attribute of expr * identifier * expr_context * loc
+           | Subscript of expr * slice * expr_context * loc
+           | Name of identifier * expr_context * loc
+           | List of expr list * expr_context * loc
+           | Tuple of expr list * expr_context * loc
+\end{verbatim}
+\begin{verbatim}
+and expr_context = Load | Store | Del | AugLoad | AugStore | Param
+and slice = Ellipsis | Slice of expr option * expr option * expr option
+            | ExtSlice of slice list
+            | Index of expr
+and boolop = And | Or 
+and operator = Add | Sub | Mult | Div | Mod | Pow | LShift 
+               | RShift | BitOr | BitXor | BitAnd | FloorDiv
+and unaryop = Invert | Not | UAdd | USub
+and cmpop = Eq | NotEq | Lt | LtE | Gt | GtE | Is | IsNot | In | NotIn
+and comprehension = expr * expr * expr list
+and excepthandler = ExceptHandler of expr option * expr option * stmt list * loc
+and arguments = expr list * identifier option * identifier option * expr list
+and keyword = identifier * expr
+and alias = identifier * identifier option
+\end{verbatim}
+
+\section{Domain}
+\subsection{\textit{Type} : Type}
+\begin{align*}
+  \mathit{Type} = & \quad \bot  \\
+  & | \quad \mathit{None}\\
+  & | \quad \mathit{NotImplemented}\\
+  & | \quad \mathit{Ellipsis}\\
+  & | \quad \mathit{Int} \quad  | \quad \mathit{CInt\ of \ int}\\
+  & | \quad \mathit{Long} \quad  | \quad \mathit{CLong\ of \ int}\\
+  & | \quad \mathit{Bool} \quad | \quad \mathit{CBool\ of \ bool}\\
+  & | \quad \mathit{Float} \quad | \quad \mathit{CFloat\ of \ float}\\
+  & | \quad \mathit{Complex} \quad | \quad \mathit{CComplex\ of \ (float * float)}\\
+  & | \quad \mathit{String\ of \ int } \quad  | \quad \mathit{CString\
+    of \ string} \quad | \quad \mathit{AString}\\
+  & | \quad \mathit{Unicode\ of \ int } \quad  | \quad \mathit{CUnicode\ of \ UTF8.t} \quad | \quad \mathit{AUnicode       }\\
+  & | \quad \mathit{Tuple\ of \ 2^{\mathit{Addr}} \ \mathtt{list} } \quad  | \quad \mathit{ATuple\ of \ 2^{\mathit{Addr}}     }\\
+  & | \quad \mathit{List\ of \ 2^{\mathit{Addr}} \ \mathtt{list}  }
+  \quad  | \quad \mathit{AList\ of \ 2^{\mathit{Addr}}     }\\
+  & | \quad \mathit{ByteArray\ of \ int  } \quad | \quad \mathit{AByteArray        }\\
+  & | \quad \mathit{Set\ of \ 2^{\mathit{Addr}} * int   } \quad | \quad \mathit{ASet\ of \ 2^{\mathit{Addr}}              }\\
+  & | \quad \mathit{FrozenSet\ of \ 2^{\mathit{Addr}} * int   } \quad | \quad \mathit{AFrozenSet\ of \ 2^{\mathit{Addr}}        }\\
+  & | \quad \mathit{Dict\ of \ (ty * 2^{\mathit{Addr}}) \ \mathtt{list}  }\\
+  & | \quad \mathit{Function\ of \ Ast.stmt }\\
+  & | \quad \mathit{AFunction\ of \ (Type.ty \ \mathtt{list} * \mathit{Mem} \to Type.ty) }\\
+  & | \quad \mathit{Generator\ of \ 2^{\mathit{Addr}} * int  } \quad  | \quad \mathit{AGenerator\ of \ 2^{\mathit{Addr}}       }\\
+  & | \quad \mathit{Object                 }\\
+  & | \quad \mathit{Type\ of \ ty             }\\
+  & | \quad \mathit{Class\ of \ (string * 2^{\mathit{Addr}}) \ \mathtt{list}}
+\end{align*}
+\subsection{\textit{Env} : Environment}
+\begin{align*}
+  \mathit{Env} & : \mathit{Var} \to 2^{\mathit{Addr}}
+\end{align*}
+\subsection{\textit{Mem} : Memory}
+\begin{align*}
+  \mathit{Mem} & : \mathit{Addr} \to 2^{\mathit{Type}}
+\end{align*}
+
+\section{Analysis}
+\subsection{Expression}
+\begin{align*}
+  \sem{exp} : \mathit{Env} \to \mathit{Mem} \to (2^{\mathit{Type}} *
+  \mathit{Mem})
+\end{align*}
+
+\subsection{Statement}
+\begin{align*}
+  \sem{stat} : \mathit{Env} \to \mathit{Mem} \to (\mathit{Env} * \mathit{Mem})
+\end{align*}
+
+\end{document}
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: t
+%%% End: 
