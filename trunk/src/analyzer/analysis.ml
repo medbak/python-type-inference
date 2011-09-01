@@ -103,6 +103,34 @@ and aexp (env : Env.t) (mem : Mem.t) (exp : Ast.expr) : (Tyset.t * Mem.t) = matc
     (Tyset.join_list tyset_list, mem')
   (* TODO : Not implemented *)
   | BinOp (left, op, right, loc) ->
+    let (tyset_left, mem') = aexp env mem left in
+    let (tyset_right, mem'') = aexp env mem' right in
+    let tyset_product : (Type.ty * Type.ty) list = Tyset.cartesian_product tyset_left tyset_right in
+    let process ty1 ty2 op mem =
+      let get_pair (op : Ast.operator) : (string * string) =
+        match op with
+            Add -> ("__add__",  "__radd__")
+          | Sub -> ("__sub__", "__rsub__")
+          | Mult ->("__mul__", "__rmul__")
+          | Div -> ("__div__", "__rdiv__")
+          | Mod -> ("__mod__", "__rmod__")
+          | Pow -> ("__pow__", "__rpow__")
+          | LShift -> ("__lshift__", "__rlshift__")
+          | RShift -> ("__rshift__", "__rrshift__")
+          | BitOr -> ("__or__", "__ror__")
+          | BitXor -> ("__xor__", "__rxor__")
+          | BitAnd -> ("__and__", "__rand__")
+          | FloorDiv -> ("__floordiv__", "__rfloordiv__")
+      in
+      let (str_fn, str_rfn) = get_pair op in
+      let lookup ty str in
+      let f = lookup ty1 str_fn in
+      let rf = lookup ty2 str_rfn in
+      call f1 env mem ty1 ty2
+        call f2 env mem ty1 ty2
+    
+
+    
     (* TODO: add more binary operation *)      
     let binop ty1 ty2 op mem =
       match op with
